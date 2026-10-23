@@ -1,29 +1,37 @@
-# OS & Editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.swp
-*.swo
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
 
-# Backend
-backend/target/
-backend/.m2/
-backend/*.log
-backend/.apt_generated
-backend/.classpath
-backend/.factorypath
-backend/.project
-backend/.settings
-backend/.sts4-cache
-
-# Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/work/
-frontend/*.log
-frontend/*.local
-
-# Root Logs
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
 *.log
+.mvn/timing.properties
+
+# IDE / Editor
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class

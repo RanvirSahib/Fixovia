@@ -18,7 +18,7 @@ public class RootController {
     @Operation(summary = "Get API Overview and Health Status")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getApiOverview() {
         Map<String, Object> info = new LinkedHashMap<>();
-        info.put("name", "WorkSaathi REST API");
+        info.put("name", "Fixovia REST API");
         info.put("version", "1.0.0");
         info.put("status", "UP & RUNNING");
         info.put("documentation", "http://localhost:8080/swagger-ui/index.html");
@@ -41,6 +41,6 @@ public class RootController {
         
         info.put("authenticatedEndpoints", authenticatedEndpoints);
 
-        return ResponseEntity.ok(ApiResponse.success("WorkSaathi Backend API is online", info));
+        return ResponseEntity.ok(ApiResponse.success("Fixovia Backend API is online", info));
     }
 }

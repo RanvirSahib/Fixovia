@@ -15,8 +15,8 @@
     <groupId>com.worksaathi</groupId>
     <artifactId>worksaathi-backend</artifactId>
     <version>1.0.0</version>
-    <name>WorkSaathi Backend</name>
-    <description>Local Worker Hiring &amp; Service Platform</description>
+    <name>Fixovia Backend</name>
+    <description>Fixovia - On-Demand Home Services &amp; Skilled Repair Platform</description>
 
     <properties>
         <java.version>17</java.version>

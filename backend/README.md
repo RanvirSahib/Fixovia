@@ -1,6 +1,6 @@
-# WorkSaathi Backend
+# Fixovia Backend
 
-A comprehensive Spring Boot backend for the WorkSaathi local worker hiring and service platform.
+A comprehensive Spring Boot backend for the Fixovia on-demand home repair and services platform.
 
 ## 🚀 Features
 

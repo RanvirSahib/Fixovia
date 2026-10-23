@@ -1,57 +1,58 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+/* ─────────────────────────────────────────
+   Fixovia API Service
+   Base URL resolved from VITE_API_URL env var
+   ───────────────────────────────────────── */
 
-async function request(path, options = {}) {
-  const token = localStorage.getItem('worksaathi_access_token');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
-  const response = await fetch(`${API_URL}${path}`, {
+const getToken = () => localStorage.getItem('fixovia_access_token');
+
+const request = async (path, options = {}) => {
+  const token = getToken();
+  const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
   });
 
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || body.success === false) {
-    throw new Error(body.message || `Request failed with status ${response.status}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
   }
-  return body.data !== undefined ? body.data : body;
-}
+
+  return res.json();
+};
 
 export const api = {
   // Auth
-  login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-  register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
-  
-  // Public Data
-  workers: (params = '') => request(`/workers${params ? `?${params}` : '?size=50&sortBy=createdAt&sortDir=desc'}`),
-  workerById: (id) => request(`/workers/${id}`),
-  services: () => request('/services'),
-  
-  // Customer Jobs
-  createJob: (payload) => request('/jobs', { method: 'POST', body: JSON.stringify(payload) }),
-  customerJobs: () => request('/jobs'),
-  jobById: (id) => request(`/jobs/${id}`),
-  cancelJob: (id) => request(`/jobs/${id}/cancel`, { method: 'POST' }),
-  reviewJob: (id, payload) => request(`/jobs/${id}/review`, { method: 'POST', body: JSON.stringify(payload) }),
+  login:    (email, password) => request('/auth/login',    { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (data)            => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Worker Jobs
-  workerJobs: () => request('/jobs/worker'),
+  // Discovery
+  workers:  (params = '') => request(`/workers${params}`),
+  services: ()            => request('/services'),
+
+  // Jobs (customer)
+  createJob:    (data) => request('/jobs',         { method: 'POST', body: JSON.stringify(data) }),
+  customerJobs: ()     => request('/jobs/customer'),
+  cancelJob:    (id)   => request(`/jobs/${id}/cancel`, { method: 'POST' }),
+
+  // Jobs (worker)
+  workerJobs:          () => request('/jobs/worker'),
   workerRequestedJobs: () => request('/jobs/worker/requested'),
-  acceptJob: (id) => request(`/jobs/${id}/accept`, { method: 'POST' }),
-  rejectJob: (id) => request(`/jobs/${id}/reject`, { method: 'POST' }),
-  startJob: (id) => request(`/jobs/${id}/start`, { method: 'POST' }),
-  onTheWay: (id) => request(`/jobs/${id}/on-the-way`, { method: 'POST' }),
-  arrived: (id) => request(`/jobs/${id}/arrived`, { method: 'POST' }),
-  completeJob: (id) => request(`/jobs/${id}/complete`, { method: 'POST' }),
-  
+  acceptJob: (id)  => request(`/jobs/${id}/accept`,    { method: 'POST' }),
+  rejectJob: (id)  => request(`/jobs/${id}/reject`,    { method: 'POST' }),
+  onTheWay:  (id)  => request(`/jobs/${id}/on-the-way`, { method: 'POST' }),
+  arrived:   (id)  => request(`/jobs/${id}/arrived`,   { method: 'POST' }),
+  startJob:  (id, otp) => request(`/jobs/${id}/start`, { method: 'POST', body: JSON.stringify({ otp }) }),
+  completeJob: (id)    => request(`/jobs/${id}/complete`, { method: 'POST' }),
+
   // Admin
   adminDashboard: () => request('/admin/dashboard'),
-  adminUsers: (page = 0, size = 20) => request(`/admin/users?page=${page}&size=${size}`),
-  adminWorkers: (page = 0, size = 20) => request(`/admin/workers?page=${page}&size=${size}`),
-  adminPendingWorkers: () => request('/admin/workers/pending'),
-  verifyWorker: (workerId) => request(`/admin/workers/${workerId}/verify`, { method: 'POST' }),
-  rejectWorker: (workerId, reason = 'Documents invalid') => request(`/admin/workers/${workerId}/reject?reason=${encodeURIComponent(reason)}`, { method: 'POST' }),
+  pendingWorkers: () => request('/admin/workers/pending'),
+  verifyWorker:   (id) => request(`/admin/workers/${id}/verify`, { method: 'POST' }),
+  rejectWorker:   (id) => request(`/admin/workers/${id}/reject`, { method: 'POST' }),
 };

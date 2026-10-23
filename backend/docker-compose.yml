@@ -3,9 +3,9 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: worksaathi-postgres
+    container_name: fixovia-postgres
     environment:
-      POSTGRES_DB: worksaathi
+      POSTGRES_DB: fixovia
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -13,25 +13,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - worksaathi-network
+      - fixovia-network
 
   redis:
     image: redis:7-alpine
-    container_name: worksaathi-redis
+    container_name: fixovia-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - worksaathi-network
+      - fixovia-network
 
   backend:
     build: .
-    container_name: worksaathi-backend
+    container_name: fixovia-backend
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/worksaathi
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fixovia
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_DATA_REDIS_HOST: redis
@@ -41,12 +41,12 @@ services:
       - postgres
       - redis
     networks:
-      - worksaathi-network
+      - fixovia-network
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  worksaathi-network:
+  fixovia-network:
     driver: bridge

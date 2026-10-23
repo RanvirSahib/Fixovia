@@ -128,9 +128,9 @@ public class DataInitializer implements CommandLineRunner {
             job1.setStatus(Job.JobStatus.ON_THE_WAY);
             job1.setScheduledDate(LocalDateTime.now().plusHours(2));
             job1.setScheduledTime("4:00 PM");
-            job1.setAddress("Flat 402, Green Valley Apartments, New Delhi");
-            job1.setLatitude(28.6139);
-            job1.setLongitude(77.2090);
+            job1.setAddress("Flat 402, Green Valley Apartments, Model Town, Ludhiana, Punjab");
+            job1.setLatitude(30.9010);
+            job1.setLongitude(75.8573);
             job1.setEstimatedPrice(500.0);
             jobRepository.save(job1);
 
@@ -144,9 +144,9 @@ public class DataInitializer implements CommandLineRunner {
                 job2.setStatus(Job.JobStatus.COMPLETED);
                 job2.setScheduledDate(LocalDateTime.now().minusDays(3));
                 job2.setScheduledTime("11:00 AM");
-                job2.setAddress("Flat 402, Green Valley Apartments, New Delhi");
-                job2.setLatitude(28.6139);
-                job2.setLongitude(77.2090);
+                job2.setAddress("Flat 402, Green Valley Apartments, Model Town, Ludhiana, Punjab");
+                job2.setLatitude(30.9010);
+                job2.setLongitude(75.8573);
                 job2.setEstimatedPrice(450.0);
                 job2.setFinalPrice(450.0);
                 job2.setCompletedAt(LocalDateTime.now().minusDays(3).plusHours(2));

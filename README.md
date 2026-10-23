@@ -1,50 +1,47 @@
-# WorkSaathi — On-Demand Local Services & Blue-Collar Hiring Platform 🛠️✨
+# Fixovia — On-Demand Home Services & Skilled Repair Marketplace 🛠️✨
 
-## 🚀 Live Demo
-
-🌐 **Frontend:** https://work-saathi.vercel.app
-
-[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-18%2F18%20Passed-brightgreen)](backend)
-[![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-13%2F13%20Passed-brightgreen)](frontend)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-blue)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18-cyan)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6-purple)](https://vitejs.dev/)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**WorkSaathi** is a modern, full-stack on-demand local services platform designed for India's service ecosystem. It connects customers with background-verified, skilled tradespeople (Electricians, Plumbers, Carpenters, AC Technicians, Home Cleaners, and more) through transparent pricing, real-time job state progression, and verified reviews.
+**Fixovia** is a market-ready, modern on-demand home repair and local services platform designed for Indian households and commercial facilities. It connects homeowners with background-verified, certified trade specialists (Electricians, Plumbers, AC Technicians, Carpenters) with upfront transparent pricing, doorstep OTP safety verification, and instant auto-dispatch.
 
 ---
 
-## 🏗️ Architecture & Project Structure
+## 🎨 Visual Identity & Architecture
 
-This monorepo contains both the **Spring Boot REST Backend** and the **React + Vite Frontend Web Application**:
+- **Warm Minimalist Aesthetic**: Warm stone backgrounds (`#fafaf9`), crisp white cards, warm coral accents (`#e11d48`), soft diffuse shadows, and smooth 300ms interactive transitions.
+- **Dedicated Portals**:
+  - 👨 **Customer App**: Floating search bar, category slider, photo-rich technician cards, hybrid booking (browse vs instant auto-match), and real-time order tracking with Doorstep Safety OTP.
+  - ⚡ **Partner Workspace**: 60-second dispatch radar, OTP job start verification, and earnings wallet.
+  - 🛡️ **Admin Control Center**: KYC technician document review, live metrics, and dispute handling.
+
+---
+
+## 📁 Monorepo Structure
 
 ```
-worksaathi/
-├── backend/                  # Spring Boot 3 + PostgreSQL REST API & WebSocket Server
-│   ├── src/
-│   │   ├── main/java/com/worksaathi/
-│   │   │   ├── config/       # Security (JWT), CORS, WebSocket, DataInitializer
-│   │   │   ├── controller/   # REST API Controllers (Auth, Workers, Jobs, Admin, etc.)
-│   │   │   ├── dto/          # Data Transfer Objects
-│   │   │   ├── entity/       # Hibernate / JPA Entities (User, Worker, Job, Review...)
-│   │   │   ├── repository/   # Spring Data JPA Repositories
-│   │   │   ├── security/     # JwtFilter, JwtService, CustomUserDetailsService
-│   │   │   └── service/      # Business logic & state machines
-│   │   └── test/             # JUnit 5 & Mockito test suites (100% Pass)
-│   ├── Dockerfile
-│   ├── docker-compose.yml
+C:\Fixovia\
+├── backend/                  # Spring Boot 3 + PostgreSQL REST API
+│   ├── src/main/java/com/worksaathi/ (Controllers, Services, Repositories, Entities)
+│   ├── src/main/resources/   # application.properties & application-dev.properties
+│   ├── src/test/java/        # JUnit 5 & Mockito test suites
 │   └── pom.xml
 │
-├── frontend/                 # React 18 + Vite Web Application & Vitest Suite
+├── frontend/                 # Modular React 18 + Vite Web Application
 │   ├── src/
-│   │   ├── __tests__/        # Vitest & Testing Library suites (100% Pass)
-│   │   ├── services/         # Centralized Fetch API Client with Bearer tokens
-│   │   ├── main.jsx          # React Component Architecture & Portal Views
-│   │   ├── setupTests.js     # Jest-DOM matchers setup
-│   │   └── styles.css        # Premium custom design system
+│   │   ├── components/
+│   │   │   ├── common/       # Navbar, Footer, Toast
+│   │   │   ├── discovery/    # HeroSection, CategorySlider, WorkerCard, SearchBar
+│   │   │   └── booking/      # BookingModal (Multi-step + GST price breakdown)
+│   │   ├── context/          # AuthContext (Role Routing), ToastContext
+│   │   ├── pages/            # Home, FindWorkers, WorkerProfile, CustomerDashboard, WorkerDashboard, AdminDashboard, AuthPage
+│   │   ├── services/         # Centralized API client (api.js)
+│   │   └── styles/           # globals.css & animations.css (Keyframes & transitions)
 │   ├── index.html
-│   ├── vite.config.js        # Vite + Vitest config
+│   ├── vite.config.js
 │   └── package.json
 │
 ├── .gitignore
@@ -53,70 +50,23 @@ worksaathi/
 
 ---
 
-## 🚀 Key Features
+## ⚡ Quick Start
 
-- 👥 **Multi-Role Experience**: Unified interface with dedicated views for **Customers**, **Workers**, and **Administrators**.
-- 🔍 **Worker Discovery & Filtering**: Real-time category filtering, price sliders, rating sorting, and proximity metrics.
-- 📅 **Interactive Job Booking**: Multi-step booking modal with instant schedule selection and price estimation.
-- ⚡ **Full Job State Machine**: Real-time progression (`REQUESTED` ➔ `ACCEPTED` ➔ `ON_THE_WAY` ➔ `ARRIVED` ➔ `IN_PROGRESS` ➔ `COMPLETED`).
-- 🛡️ **Admin Verification Portal**: Real-time dashboard statistics and 1-click verification queue for newly registered professionals.
-- 🔐 **Stateless JWT Security**: Secure access tokens, password hashing with BCrypt, role-based route guards.
-- 📖 **Interactive API Documentation**: OpenAPI 3 & Swagger UI explorer pre-configured.
-
----
-
-## ⚡ Quick Start Guide
-
-### Prerequisites
-- **Java 17 or 21**
-- **Node.js 18+** & **npm**
-- **PostgreSQL** (running on port `5432` or `1104`)
-
----
-
-### 1. Start the Backend API
-
-```bash
-cd backend
-
-# Build and run the Spring Boot application
-mvn spring-boot:run
-```
-* **Backend API Base**: `http://localhost:8080/api/v1`
-* **Swagger UI Docs**: `http://localhost:8080/swagger-ui/index.html`
-
----
-
-### 2. Start the Frontend Web App
-
+### 1. Frontend (React 18 + Vite)
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start Vite dev server
 npm run dev
 ```
-* **Frontend Application**: `http://localhost:5173`
+- App URL: `http://localhost:5173`
 
----
-
-## 🧪 Testing Suites & Verification
-
-### Run Backend Tests (JUnit 5 / Mockito)
+### 2. Backend (Spring Boot 3)
 ```bash
 cd backend
-mvn test
+mvn spring-boot:run
 ```
-* **Result**: `Tests run: 18, Failures: 0, Errors: 0, Skipped: 0` (100% Success)
-
-### Run Frontend Tests (Vitest / Testing Library)
-```bash
-cd frontend
-npm test
-```
-* **Result**: `2 Test Files Passed, 13 Tests Passed` (100% Success)
+- REST API: `http://localhost:8080/api/v1`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
 ---
 
@@ -124,13 +74,8 @@ npm test
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| 👨 **Customer** | `customer@worksaathi.com` | `password123` |
-| ⚡ **Worker** | `raj@worksaathi.com` | `password123` |
-| 🛡️ **Admin** | `admin@worksaathi.com` | `password123` |
+| 👨 **Customer** | `customer@fixovia.in` | `demo123` |
+| ⚡ **Partner / Worker** | `worker@fixovia.in` | `demo123` |
+| 🛡️ **Admin** | `admin@fixovia.in` | `demo123` |
 
-*(You can also use the 1-click demo buttons on the login screen).*
-
----
-
-## 📄 License
-Distributed under the **MIT License**.
+*(1-click demo buttons are also available on the Sign In page).*
