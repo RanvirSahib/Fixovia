@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
+import { getStoredPartnerRate } from '../../utils/partnerRates';
 
 const STEPS = ['Service', 'Schedule', 'Address', 'Confirm'];
 
@@ -11,12 +13,149 @@ const TIME_SLOTS = [
   { id: 'evening',   label: 'Evening',   range: '4 PM – 8 PM',  icon: '🌆' },
 ];
 
-const SERVICE_TYPES = [
-  'Fan Installation', 'Wiring / Rewiring', 'MCB / Switchboard', 'Short Circuit Fix',
-  'Pipe Leak Repair', 'Drain Unclog', 'Tap Installation', 'Geyser Repair',
-  'AC Deep Cleaning', 'Gas Refill', 'Cooling Problem', 'AC Installation',
-  'Furniture Repair', 'Door Lock Fix', 'Wood Polish', 'Wardrobe Assembly',
-];
+export const TRADE_SERVICES = {
+  plumber: {
+    trade: 'Plumbing',
+    title: 'Plumbing & Water Systems',
+    quick: [
+      'Pipe Leak Repair',
+      'Tap & Faucet Installation',
+      'Drain & Sink Unclogging',
+      'Geyser (Water Heater) Installation',
+      'Toilet / Flush Tank Repair',
+      'Water Motor / Pump Fixing',
+      'Diverter / Shower Repair',
+      'Overhead Tank Float Valve',
+    ],
+    placeholderInput: 'Or type your plumbing service (e.g. Tap fix, geyser piping)…',
+    placeholderDesc: 'E.g. The water pipe beneath the kitchen sink has a steady drip, causing water logging…',
+  },
+  electrician: {
+    trade: 'Electrical',
+    title: 'Electrical Repairs & Wiring',
+    quick: [
+      'Fan Repair / Installation',
+      'Concealed Wiring & Rewiring',
+      'MCB Trip & Switchboard Repair',
+      'Short Circuit Troubleshooting',
+      'Light & Chandelier Fitting',
+      'Inverter Battery Connection',
+      '16A Heavy Appliance Socket',
+      'Earthing & Voltage Spike Fix',
+    ],
+    placeholderInput: 'Or type your electrical service (e.g. MCB tripping, fan installation)…',
+    placeholderDesc: 'E.g. My ceiling fan stopped working after a power surge, and the MCB keeps tripping…',
+  },
+  ac: {
+    trade: 'AC Repair',
+    title: 'AC Servicing & Cooling Care',
+    quick: [
+      'Power Jet Deep Cleaning',
+      'Refrigerant Gas Refill (R32/R410A)',
+      'Cooling Issue Diagnostics',
+      'Water Leakage From Indoor Unit',
+      'AC Installation / Uninstallation',
+      'Compressor / Capacitor Repair',
+      'PCB Circuit Board Diagnostics',
+      'Copper Pipe Insulation & Flare',
+    ],
+    placeholderInput: 'Or type your AC service (e.g. Jet cleaning, gas refill)…',
+    placeholderDesc: 'E.g. Split AC is blowing normal air instead of cool air, and water is dripping from indoor unit…',
+  },
+  carpenter: {
+    trade: 'Carpentry',
+    title: 'Carpentry & Furniture Assembly',
+    quick: [
+      'Door Lock & Smart Lock Fitting',
+      'Hydraulic Bed & Hinge Repair',
+      'Modular Kitchen Cabinet Tuning',
+      'Furniture Assembly (IKEA/Pepperfry)',
+      'Wardrobe Sliding Channel Fix',
+      'Door Planing / Realignment',
+      'Wooden Shelf & Latch Mounting',
+      'Wood Polishing & Touch-up',
+    ],
+    placeholderInput: 'Or type your carpentry service (e.g. Lock repair, bed assembly)…',
+    placeholderDesc: 'E.g. The bedroom wardrobe sliding door is derailed and sticking, need channel alignment…',
+  },
+  painter: {
+    trade: 'Painting',
+    title: 'Home Painting & Waterproofing',
+    quick: [
+      'Interior Wall Painting',
+      'Waterproofing & Damp Treatment',
+      'Accent Wall & Texture Design',
+      'Wall Putty & Crack Filling',
+      'Door & Window Wood Enamel',
+      'Exterior Weatherproof Coat',
+      'Ceiling Stains & Primer Touch-up',
+      'Pre-Painting Floor Masking',
+    ],
+    placeholderInput: 'Or type your painting service (e.g. Waterproofing, accent wall)…',
+    placeholderDesc: 'E.g. Wall peeling and dampness near the window, need scraping, waterproofing base, and repaint…',
+  },
+  cleaner: {
+    trade: 'Cleaning',
+    title: 'Deep Cleaning & Sanitization',
+    quick: [
+      'Bathroom Deep Descaling',
+      'Kitchen Chimney & Degreasing',
+      'Sofa & Carpet Shampooing',
+      'Full Home Deep Cleaning',
+      'Floor Machine Scrubbing',
+      'Balcony & Window Railing Wash',
+      'Mattress Sanitization',
+      'Post-Renovation House Clean',
+    ],
+    placeholderInput: 'Or type your cleaning service (e.g. Bathroom descaling, sofa shampoo)…',
+    placeholderDesc: 'E.g. Hard water stains on bathroom glass partition and tiles, need machine scrub and acid-free clean…',
+  },
+  appliance: {
+    trade: 'Appliances',
+    title: 'Appliance Repair & Installation',
+    quick: [
+      'Washing Machine Drum / Drain Fix',
+      'Refrigerator Cooling / Defrost Fix',
+      'Microwave Oven Magnetron Repair',
+      'RO Water Purifier Filter Change',
+      'Geyser Element Replacement',
+      'Chimney Motor / Suction Fix',
+      'Induction Cooktop PCB Fix',
+      'Appliance Installation & Demo',
+    ],
+    placeholderInput: 'Or type your appliance service (e.g. Washing machine spin, fridge cooling)…',
+    placeholderDesc: 'E.g. Front load washing machine making loud grinding noise during spin cycle…',
+  },
+  pest: {
+    trade: 'Pest Control',
+    title: 'Pest Control & Safety Shield',
+    quick: [
+      'Odorless Cockroach Gel Treatment',
+      'Anti-Termite Drilling & Chemical Shield',
+      'Bed Bug Heat / Chemical Eradication',
+      'Mosquito Fogging & Larva Spray',
+      'Rodent Baiting & Trap Placement',
+      'Ant & Insect Perimeter Barrier',
+      'Wood Borer Treatment',
+      'Commercial Kitchen Sanitization',
+    ],
+    placeholderInput: 'Or type your pest control service (e.g. Cockroach gel, termite treatment)…',
+    placeholderDesc: 'E.g. Seeing small cockroaches in kitchen drawers and cabinets, need odorless herbal gel treatment…',
+  },
+};
+
+export const getTradeConfig = (roleOrTrade = '') => {
+  const str = (roleOrTrade || '').toLowerCase();
+  if (str.includes('plumb')) return TRADE_SERVICES.plumber;
+  if (str.includes('elect')) return TRADE_SERVICES.electrician;
+  if (str.includes('ac') || str.includes('cool') || str.includes('hvac')) return TRADE_SERVICES.ac;
+  if (str.includes('carp')) return TRADE_SERVICES.carpenter;
+  if (str.includes('paint')) return TRADE_SERVICES.painter;
+  if (str.includes('clean')) return TRADE_SERVICES.cleaner;
+  if (str.includes('appliance') || str.includes('chip') || str.includes('micro') || str.includes('wash')) return TRADE_SERVICES.appliance;
+  if (str.includes('pest')) return TRADE_SERVICES.pest;
+  return TRADE_SERVICES.plumber;
+};
 
 export default function BookingModal({ worker, onClose, onSuccess }) {
   const { isAuthenticated, user } = useAuth();
@@ -38,7 +177,7 @@ export default function BookingModal({ worker, onClose, onSuccess }) {
   const [instructions, setInstructions] = useState('');
 
   // Pricing
-  const baseLabor     = worker?.rate || 499;
+  const baseLabor     = worker?.rate ? Number(worker.rate) : getStoredPartnerRate(499);
   const partsEstimate = 0;
   const subtotal      = baseLabor + partsEstimate;
   const gst           = Math.round(subtotal * 0.18);
@@ -69,7 +208,42 @@ export default function BookingModal({ worker, onClose, onSuccess }) {
         ? 'Today'
         : dateOption === 'tomorrow'
         ? 'Tomorrow'
-        : customDate;
+        : customDate || 'Today';
+
+      const activeBookingData = {
+        id: 'fix-job-' + Date.now(),
+        trade: worker?.role || 'Plumbing',
+        service: serviceType || `${worker?.role || 'Plumbing'} Service`,
+        description: description || '',
+        time: `${dateLabel}${timeSlot ? `, ${timeSlot}` : ''}`,
+        location: address ? `${address}${landmark ? `, ${landmark}` : ''}` : 'Model Town, Ludhiana, Punjab',
+        baseLabor: baseLabor,
+        partsEstimate: partsEstimate || 0,
+        tax: gst,
+        platformFee: platformFee,
+        total: total,
+        worker: {
+          id: worker?.id || 2,
+          name: worker?.name || 'Sanjay Verma',
+          role: worker?.role || 'Plumber',
+          rating: worker?.rating || 4.8,
+          reviews: worker?.reviews || 98,
+          initials: worker?.initials || (worker?.name ? worker.name.split(' ').map(n=>n[0]).join('') : 'SV'),
+          color: worker?.color || '#7c3aed',
+          distance: worker?.distance || 1.8,
+        },
+        stage: 1,
+        pin: '4827',
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        localStorage.setItem('fixovia_has_active_booking', 'true');
+        localStorage.setItem('fixovia_active_booking', JSON.stringify(activeBookingData));
+        window.dispatchEvent(new Event('fixovia_booking_created'));
+      } catch (e) {
+        console.error('Failed to save booking to localStorage', e);
+      }
 
       try {
         await api.createJob({
@@ -89,7 +263,7 @@ export default function BookingModal({ worker, onClose, onSuccess }) {
       setBookingConfirmed(true);
       setTimeout(() => {
         toast.success('Booking confirmed! Your pro will be in touch shortly.');
-        onSuccess && onSuccess();
+        onSuccess && onSuccess(activeBookingData);
         onClose();
       }, 2500);
     } catch {
@@ -117,20 +291,25 @@ export default function BookingModal({ worker, onClose, onSuccess }) {
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  return (
-    <div className="overlay" onClick={(e) => !bookingConfirmed && e.target === e.currentTarget && onClose()}>
+  const modalContent = (
+    <div
+      className="overlay"
+      onClick={(e) => !bookingConfirmed && e.target === e.currentTarget && onClose()}
+      style={{ zIndex: 10000 }}
+    >
       <div
         className="modal-enter"
         style={{
           background: 'var(--white)',
-          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          borderRadius: '24px',
           width: '100%',
           maxWidth: 580,
-          maxHeight: '92vh',
-          overflowY: 'auto',
+          maxHeight: 'min(90vh, 760px)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
         }}
       >
         {bookingConfirmed ? (
@@ -362,211 +541,221 @@ export default function BookingModal({ worker, onClose, onSuccess }) {
           </div>
         ) : (
           <>
-            {/* ── Modal Header ── */}
-        <div style={{
-          padding: '20px 24px 16px',
-          borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          background: 'var(--white)',
-          zIndex: 1,
-          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-        }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--charcoal)' }}>
-              Book {worker?.name}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
-              {worker?.role} · ₹{worker?.rate}/visit
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'var(--bg-stone)',
-              border: '1px solid var(--border)',
-              cursor: 'pointer',
-              fontSize: 18,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'var(--transition)',
-              color: 'var(--slate)',
-            }}
-          >
-            ×
-          </button>
-        </div>
-
-        {/* ── Progress Dots ── */}
-        <div style={{
-          padding: '16px 24px 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}>
-          {STEPS.map((s, i) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
+            {/* ── Fixed Top Header & Progress ── */}
+            <div style={{ flexShrink: 0, background: 'var(--white)', borderBottom: '1px solid var(--border)' }}>
+              {/* Modal Header */}
               <div style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: i <= step ? 'var(--primary)' : 'var(--bg-stone)',
-                border: `2px solid ${i <= step ? 'var(--primary)' : 'var(--border)'}`,
+                padding: '20px 24px 14px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                fontWeight: 700,
-                color: i <= step ? 'white' : 'var(--muted)',
-                transition: 'var(--transition)',
-                flexShrink: 0,
+                justifyContent: 'space-between',
               }}>
-                {i < step ? '✓' : i + 1}
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--charcoal)' }}>
+                    Book {worker?.name}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
+                    {worker?.role} · ₹{worker?.rate}/visit
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: 'var(--bg-stone)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    fontSize: 18,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'var(--transition)',
+                    color: 'var(--slate)',
+                  }}
+                  aria-label="Close booking modal"
+                >
+                  ×
+                </button>
               </div>
-              {i < STEPS.length - 1 && (
-                <div style={{
-                  flex: 1,
-                  height: 2,
-                  background: i < step ? 'var(--primary)' : 'var(--border)',
-                  margin: '0 4px',
-                  transition: 'var(--transition)',
-                  borderRadius: 1,
-                }} />
+
+              {/* Progress Dots */}
+              <div style={{
+                padding: '0 24px 6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}>
+                {STEPS.map((s, i) => (
+                  <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
+                    <div style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: i <= step ? 'var(--primary)' : 'var(--bg-stone)',
+                      border: `2px solid ${i <= step ? 'var(--primary)' : 'var(--border)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: i <= step ? 'white' : 'var(--muted)',
+                      transition: 'var(--transition)',
+                      flexShrink: 0,
+                    }}>
+                      {i < step ? '✓' : i + 1}
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <div style={{
+                        flex: 1,
+                        height: 2,
+                        background: i < step ? 'var(--primary)' : 'var(--border)',
+                        margin: '0 4px',
+                        transition: 'var(--transition)',
+                        borderRadius: 1,
+                      }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: '0 24px 14px', display: 'flex', justifyContent: 'space-between' }}>
+                {STEPS.map((s, i) => (
+                  <span key={s} style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: i === step ? 'var(--primary)' : 'var(--muted)',
+                    transition: 'var(--transition)',
+                  }}>{s}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Scrollable Step Content (Middle) ── */}
+            <div
+              className={direction === 'right' ? 'step-enter-right' : 'step-enter-left'}
+              key={step}
+              style={{
+                padding: '24px',
+                flex: 1,
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
+              {step === 0 && (
+                <StepService
+                  worker={worker}
+                  serviceType={serviceType}
+                  setServiceType={setServiceType}
+                  description={description}
+                  setDescription={setDescription}
+                />
+              )}
+              {step === 1 && (
+                <StepSchedule
+                  dateOption={dateOption}
+                  setDateOption={setDateOption}
+                  customDate={customDate}
+                  setCustomDate={setCustomDate}
+                  timeSlot={timeSlot}
+                  setTimeSlot={setTimeSlot}
+                />
+              )}
+              {step === 2 && (
+                <StepAddress
+                  address={address}
+                  setAddress={setAddress}
+                  landmark={landmark}
+                  setLandmark={setLandmark}
+                  instructions={instructions}
+                  setInstructions={setInstructions}
+                />
+              )}
+              {step === 3 && (
+                <StepConfirm
+                  worker={worker}
+                  serviceType={serviceType}
+                  description={description}
+                  dateOption={dateOption}
+                  customDate={customDate}
+                  timeSlot={timeSlot}
+                  address={address}
+                  baseLabor={baseLabor}
+                  partsEstimate={partsEstimate}
+                  gst={gst}
+                  platformFee={platformFee}
+                  total={total}
+                />
               )}
             </div>
-          ))}
-        </div>
-        <div style={{ padding: '6px 24px 0', display: 'flex', justifyContent: 'space-between' }}>
-          {STEPS.map((s, i) => (
-            <span key={s} style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: i === step ? 'var(--primary)' : 'var(--muted)',
-              transition: 'var(--transition)',
-            }}>{s}</span>
-          ))}
-        </div>
 
-        {/* ── Step Content ── */}
-        <div
-          className={direction === 'right' ? 'step-enter-right' : 'step-enter-left'}
-          key={step}
-          style={{ padding: '24px', flex: 1 }}
-        >
-          {step === 0 && (
-            <StepService
-              serviceType={serviceType}
-              setServiceType={setServiceType}
-              description={description}
-              setDescription={setDescription}
-            />
-          )}
-          {step === 1 && (
-            <StepSchedule
-              dateOption={dateOption}
-              setDateOption={setDateOption}
-              customDate={customDate}
-              setCustomDate={setCustomDate}
-              timeSlot={timeSlot}
-              setTimeSlot={setTimeSlot}
-            />
-          )}
-          {step === 2 && (
-            <StepAddress
-              address={address}
-              setAddress={setAddress}
-              landmark={landmark}
-              setLandmark={setLandmark}
-              instructions={instructions}
-              setInstructions={setInstructions}
-            />
-          )}
-          {step === 3 && (
-            <StepConfirm
-              worker={worker}
-              serviceType={serviceType}
-              description={description}
-              dateOption={dateOption}
-              customDate={customDate}
-              timeSlot={timeSlot}
-              address={address}
-              baseLabor={baseLabor}
-              partsEstimate={partsEstimate}
-              gst={gst}
-              platformFee={platformFee}
-              total={total}
-            />
-          )}
-        </div>
-
-        {/* ── Footer Buttons ── */}
-        <div style={{
-          padding: '16px 24px 24px',
-          borderTop: '1px solid var(--border)',
-          display: 'flex',
-          gap: 12,
-          position: 'sticky',
-          bottom: 0,
-          background: 'var(--white)',
-        }}>
-          {step > 0 && (
-            <button
-              className="btn-outline"
-              onClick={goPrev}
-              style={{ flex: 1 }}
-            >
-              ← Back
-            </button>
-          )}
-          {step < STEPS.length - 1 ? (
-            <button
-              className="btn-primary"
-              onClick={goNext}
-              disabled={!canProceed()}
-              style={{ flex: 2 }}
-            >
-              Continue →
-            </button>
-          ) : (
-            <button
-              className="btn-primary"
-              onClick={handleConfirm}
-              disabled={submitting}
-              style={{ flex: 2 }}
-            >
-              {submitting ? '⌛ Confirming…' : `✓ Confirm & Pay ₹${total}`}
-            </button>
-          )}
-        </div>
+            {/* ── Fixed Footer Buttons ── */}
+            <div style={{
+              padding: '16px 24px 20px',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              gap: 12,
+              background: 'var(--white)',
+              flexShrink: 0,
+            }}>
+              {step > 0 && (
+                <button
+                  className="btn-outline"
+                  onClick={goPrev}
+                  style={{ flex: 1 }}
+                >
+                  ← Back
+                </button>
+              )}
+              {step < STEPS.length - 1 ? (
+                <button
+                  className="btn-primary"
+                  onClick={goNext}
+                  disabled={!canProceed()}
+                  style={{ flex: 2 }}
+                >
+                  Continue →
+                </button>
+              ) : (
+                <button
+                  className="btn-primary"
+                  onClick={handleConfirm}
+                  disabled={submitting}
+                  style={{ flex: 2 }}
+                >
+                  {submitting ? '⌛ Confirming…' : `✓ Confirm & Pay ₹${total}`}
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
 
 /* ── Sub-components ── */
 
-function StepService({ serviceType, setServiceType, description, setDescription }) {
-  const quickServices = [
-    'Fan Installation', 'Wiring / Rewiring', 'Pipe Leak Repair',
-    'AC Deep Cleaning', 'Furniture Repair', 'Tap Installation',
-  ];
+function StepService({ worker, serviceType, setServiceType, description, setDescription }) {
+  const tradeConfig = getTradeConfig(worker?.role || worker?.trade || '');
+
+  // Merge worker's specific verified skills with trade standard fixing options
+  const quickServices = Array.from(new Set([
+    ...(worker?.skills || []),
+    ...tradeConfig.quick,
+  ])).slice(0, 8);
+
+  const proFirstName = worker?.name ? worker.name.split(' ')[0] : 'your verified pro';
 
   return (
     <div>
       <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6, color: 'var(--charcoal)' }}>
-        What needs fixing?
+        What needs fixing in {tradeConfig.trade}?
       </h3>
       <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 20 }}>
-        Choose a service or type your own.
+        Choose a {tradeConfig.trade.toLowerCase()} service for {proFirstName} or type your own.
       </p>
 
       {/* Quick picks */}
@@ -574,6 +763,7 @@ function StepService({ serviceType, setServiceType, description, setDescription 
         {quickServices.map((s) => (
           <button
             key={s}
+            type="button"
             onClick={() => setServiceType(s)}
             style={{
               padding: '7px 14px',
@@ -594,7 +784,7 @@ function StepService({ serviceType, setServiceType, description, setDescription 
 
       <input
         className="input"
-        placeholder="Or type your service…"
+        placeholder={tradeConfig.placeholderInput}
         value={serviceType}
         onChange={(e) => setServiceType(e.target.value)}
         style={{ marginBottom: 16 }}
@@ -606,7 +796,7 @@ function StepService({ serviceType, setServiceType, description, setDescription 
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="E.g. My ceiling fan stopped working after a power cut…"
+        placeholder={tradeConfig.placeholderDesc}
         rows={4}
         style={{
           width: '100%',

@@ -1,24 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import ThemeToggle from './ThemeToggle';
 
 export default function Navbar({ currentPage, onNavigate, onOpenBooking }) {
   const { user, role, logout } = useAuth();
-  const [theme, setTheme] = useState(() => {
-    return document.documentElement.getAttribute('data-theme') || 'light';
-  });
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      root.setAttribute('data-theme', 'light');
-    }
-  }, [theme]);
+  const [navHidden, setNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY <= 20) {
+            setNavHidden(false);
+          } else if (currentScrollY > lastScrollY.current && currentScrollY > 40) {
+            // Scrolling down -> hide navbar
+            setNavHidden(true);
+          } else if (currentScrollY < lastScrollY.current - 12) {
+            // Scrolling up -> reveal navbar
+            setNavHidden(false);
+          }
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleNavClick = (targetId) => {
     if (currentPage !== 'home') {
@@ -34,17 +46,19 @@ export default function Navbar({ currentPage, onNavigate, onOpenBooking }) {
   };
 
   return (
-    <nav>
+    <nav className={navHidden ? 'nav-hidden' : ''}>
       <div className="wrap">
         {/* ── Brand Logo ── */}
         <a
           className="logo"
-          href="#top"
+          href={user ? undefined : "#top"}
           onClick={(e) => {
             e.preventDefault();
+            if (user) return;
             onNavigate('home');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
+          style={user ? { cursor: 'default' } : {}}
           aria-label="Fixovia – Verified home repair"
         >
           <img
@@ -54,8 +68,9 @@ export default function Navbar({ currentPage, onNavigate, onOpenBooking }) {
           />
         </a>
 
-        {/* ── Desktop Navigation Links ── */}
-        <ul>
+        {/* ── Desktop Navigation Links (Guest / Public Only) ── */}
+        {!user && (
+          <ul>
           <li>
             <button
               onClick={() => onNavigate('services')}
@@ -212,20 +227,62 @@ export default function Navbar({ currentPage, onNavigate, onOpenBooking }) {
             </button>
           </li>
         </ul>
+        )}
 
         {/* ── Right Actions ── */}
         <div className="nr">
-          <ThemeToggle theme={theme} onToggle={toggleTheme} size={40} />
-
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {currentPage !== 'find' && (
+                <button
+                  className="btn sm o"
+                  onClick={() => onNavigate('find')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  title="Find nearby pros on map"
+                >
+                  📍 Find Pros
+                </button>
+              )}
               <button
                 className="btn sm p"
                 onClick={() => onNavigate('dashboard')}
-                title={`Open ${role === 'worker' ? 'Partner Workspace' : role === 'admin' ? 'Admin Panel' : 'My Bookings'}`}
+                title={`Open ${role === 'worker' ? 'Partner Workspace' : role === 'admin' ? 'Admin Panel' : 'Customer Dashboard'}`}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                {role === 'worker' ? '⚡ Workspace' : role === 'admin' ? '🛡️ Admin' : '📋 Bookings'} ({user.name?.split(' ')[0]})
+                {role === 'worker' ? '⚡ Workspace' : role === 'admin' ? '🛡️ Admin' : '📋 Dashboard'}
               </button>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  background: 'var(--bg2)',
+                  border: '1px solid var(--line)',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  color: 'var(--ink)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    background: 'var(--primary)',
+                    color: '#fff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 800,
+                  }}
+                >
+                  {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+                </span>
+                <span>{user.name?.split(' ')[0]}</span>
+              </div>
               <button
                 className="btn sm g"
                 onClick={() => { logout(); onNavigate('home'); }}

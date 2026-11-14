@@ -1,0 +1,1500 @@
+/* Fixovia Dashboards Styles - Exact match to Fixovia – Dashboards.html */
+
+.fixovia-dashboard-layout {
+  --bg: #f6f9fe;
+  --bg2: #e8f0fb;
+  --card: #fff;
+  --line: #d8e3f3;
+  --ink: #1b2745;
+  --slate: #4a5775;
+  --mute: #8e9ab5;
+  --coral: #c2410c;
+  --coral2: #0d56cb;
+  --teal: #0b7a82;
+  --tealsoft: #d5f3f5;
+  --coralsoft: #ffe9d6;
+  --sun: #f97316;
+  --ok: #15803d;
+  --oksoft: #dcfce7;
+  --shadow: 0 18px 44px -24px rgba(27, 39, 69, 0.38);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.55 'Plus Jakarta Sans', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
+  color-scheme: light;
+}
+
+.fixovia-dashboard-layout * {
+  box-sizing: border-box;
+}
+
+.fixovia-dashboard-layout h1,
+.fixovia-dashboard-layout h2,
+.fixovia-dashboard-layout h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+
+.fixovia-dashboard-layout h1 {
+  font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+  font-weight: 800;
+}
+
+.fixovia-dashboard-layout h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.fixovia-dashboard-layout h3 {
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.fixovia-dashboard-layout .hand {
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--coral);
+  line-height: 1;
+}
+
+.fixovia-dashboard-layout button {
+  font-family: inherit;
+}
+
+.fixovia-dashboard-layout :focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.fixovia-dashboard-layout a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Top Horizontal Navigation Bar ── */
+.fixovia-dashboard-layout .dash-navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  z-index: 50;
+  box-shadow: 0 4px 20px -8px rgba(27, 39, 69, 0.08);
+  backdrop-filter: blur(12px);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+  will-change: transform, opacity;
+}
+
+.fixovia-dashboard-layout .dash-navbar.nav-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.fixovia-dashboard-layout .nav-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fixovia-dashboard-layout .nav-brand a {
+  display: flex;
+  align-items: center;
+}
+
+.fixovia-dashboard-layout .nav-brand img {
+  height: 40px;
+  width: auto;
+  display: block;
+  transition: all 0.3s;
+}
+
+/* ── Horizontal Navigation Links (Nav Tabs) ── */
+.fixovia-dashboard-layout nav#nav.dash-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg2);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+
+.fixovia-dashboard-layout nav#nav .nav-tab-btn {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--slate);
+  transition: all 0.25s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.fixovia-dashboard-layout nav#nav .nav-tab-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.fixovia-dashboard-layout nav#nav .nav-tab-btn.on {
+  background: var(--coral2);
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(13, 86, 203, 0.4);
+}
+
+/* ── Right Actions: Switcher, Theme, Profile ── */
+.fixovia-dashboard-layout .nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fixovia-dashboard-layout .pv {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px;
+  min-width: 250px;
+}
+
+.fixovia-dashboard-layout .pv button {
+  position: relative;
+  z-index: 1;
+  min-height: 34px;
+  border: 0;
+  background: none;
+  font: 700 0.82rem 'Plus Jakarta Sans', sans-serif;
+  color: var(--slate);
+  cursor: pointer;
+  transition: color 0.3s;
+  padding: 0 10px;
+}
+
+.fixovia-dashboard-layout .pv button.on {
+  color: #fff;
+}
+
+.fixovia-dashboard-layout .pv .pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(33.333% - 2px);
+  border-radius: 999px;
+  background: var(--coral2);
+  transition: transform 0.4s cubic-bezier(0.34, 1.45, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(13, 86, 203, 0.35);
+}
+
+.fixovia-dashboard-layout #theme {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 1rem;
+  display: grid;
+  place-items: center;
+  transition: all 0.3s;
+  flex: none;
+}
+
+.fixovia-dashboard-layout #theme:hover {
+  border-color: var(--coral2);
+  transform: rotate(30deg);
+}
+
+/* ── User Profile Badge in Navbar ── */
+.fixovia-dashboard-layout .me-nav-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.fixovia-dashboard-layout .me-profile-link {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 14px 4px 5px;
+  border-radius: 999px;
+  background: var(--bg2);
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-decoration: none;
+}
+
+.fixovia-dashboard-layout .me-profile-link:hover,
+.fixovia-dashboard-layout .me-profile-link.active {
+  border-color: var(--coral2);
+  background: #eff6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 86, 203, 0.12);
+}
+
+.fixovia-dashboard-layout .av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--coral2), #14b0b8);
+  flex: none;
+}
+
+.fixovia-dashboard-layout .me-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.fixovia-dashboard-layout .me-profile-link b {
+  font-size: 0.82rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.fixovia-dashboard-layout .me-profile-link small {
+  color: var(--mute);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.fixovia-dashboard-layout .me-profile-link .profile-pill-arrow {
+  font-size: 0.75rem;
+  color: var(--coral2);
+  font-weight: 800;
+  margin-left: 2px;
+  transition: transform 0.2s;
+}
+
+.fixovia-dashboard-layout .me-profile-link:hover .profile-pill-arrow {
+  transform: translateX(2px);
+}
+
+.fixovia-dashboard-layout button.btn-signout-separate {
+  color: var(--slate);
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.fixovia-dashboard-layout button.btn-signout-separate:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+/* ── Main Workspace ── */
+.fixovia-dashboard-layout .main {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 28px 60px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fixovia-dashboard-layout .demo-notice-tag {
+  font-size: 0.8rem;
+  color: var(--mute);
+  margin-bottom: 18px;
+}
+
+.fixovia-dashboard-layout .view {
+  display: none;
+}
+
+.fixovia-dashboard-layout .view.on {
+  display: block;
+  animation: dashRise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.fixovia-dashboard-layout .subpage-view {
+  display: block;
+  animation: dashRise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes dashRise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fixovia-dashboard-layout .hd {
+  margin-bottom: 22px;
+}
+
+.fixovia-dashboard-layout .hd p {
+  color: var(--slate);
+  margin-top: 6px;
+}
+
+.fixovia-dashboard-layout .grid {
+  display: grid;
+  gap: 18px;
+}
+
+.fixovia-dashboard-layout .g2 {
+  grid-template-columns: 1.5fr 1fr;
+}
+
+.fixovia-dashboard-layout .g3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.fixovia-dashboard-layout .g4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.fixovia-dashboard-layout .card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  transition: transform 0.35s, box-shadow 0.35s;
+}
+
+.fixovia-dashboard-layout .card.lift:hover {
+  transform: translateY(-5px);
+}
+
+.fixovia-dashboard-layout .sec {
+  margin-top: 26px;
+}
+
+.fixovia-dashboard-layout .sec > h2 {
+  margin-bottom: 14px;
+}
+
+.fixovia-dashboard-layout .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--coralsoft);
+  color: var(--coral);
+}
+
+.fixovia-dashboard-layout .chip.g {
+  background: var(--oksoft);
+  color: var(--ok);
+}
+
+.fixovia-dashboard-layout .chip.t {
+  background: var(--tealsoft);
+  color: var(--teal);
+}
+
+.fixovia-dashboard-layout .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  font: 700 0.95rem 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+}
+
+.fixovia-dashboard-layout .btn.p {
+  background: var(--sun);
+  color: #1b2745;
+  box-shadow: 0 10px 22px -12px var(--sun);
+}
+
+.fixovia-dashboard-layout .btn.p:hover {
+  transform: translateY(-3px);
+}
+
+.fixovia-dashboard-layout .btn.b {
+  background: var(--coral2);
+  color: #fff;
+}
+
+.fixovia-dashboard-layout .btn.b:hover {
+  transform: translateY(-3px);
+}
+
+.fixovia-dashboard-layout .btn.o {
+  border-color: var(--line);
+  background: none;
+  color: var(--ink);
+}
+
+.fixovia-dashboard-layout .btn.o:hover {
+  border-color: var(--coral2);
+}
+
+.fixovia-dashboard-layout .btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.fixovia-dashboard-layout .acts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* ── Quick Book ── */
+.fixovia-dashboard-layout .no-booking-hero-card {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--card);
+  border: 1.5px dashed var(--line);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+}
+
+.fixovia-dashboard-layout .no-booking-icon-badge {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: #f0f7ff;
+  border: 1.5px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
+}
+
+.fixovia-dashboard-layout .qb {
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 22px;
+  padding: 18px;
+  color: var(--ink);
+  transition: all 0.35s;
+}
+
+.fixovia-dashboard-layout .qb:hover {
+  transform: translateY(-6px);
+  border-color: var(--coral2);
+  box-shadow: var(--shadow);
+}
+
+.fixovia-dashboard-layout .qb .qb-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition: transform 0.35s cubic-bezier(0.34, 1.45, 0.64, 1), box-shadow 0.35s ease;
+}
+
+.fixovia-dashboard-layout .qb:hover .qb-icon-badge {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.fixovia-dashboard-layout .qb i {
+  font-style: normal;
+  font-size: 1.8rem;
+  display: block;
+  animation: dashBob 3s ease-in-out infinite;
+}
+
+.fixovia-dashboard-layout .qb:nth-child(2) i {
+  animation-delay: -0.7s;
+}
+
+.fixovia-dashboard-layout .qb:nth-child(3) i {
+  animation-delay: -1.4s;
+}
+
+.fixovia-dashboard-layout .qb:nth-child(4) i {
+  animation-delay: -2.1s;
+}
+
+@keyframes dashBob {
+  50% { transform: translateY(-5px) rotate(-6deg); }
+}
+
+.fixovia-dashboard-layout .qb b {
+  display: block;
+  margin-top: 6px;
+}
+
+.fixovia-dashboard-layout .qb span {
+  display: block;
+  margin-top: 4px;
+}
+
+.fixovia-dashboard-layout .qb small {
+  display: block;
+  margin-top: 8px;
+  color: var(--teal);
+  font-weight: 700;
+}
+
+/* ── Stepper ── */
+.fixovia-dashboard-layout .stp {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin: 26px 4px 8px;
+}
+
+.fixovia-dashboard-layout .stp::before,
+.fixovia-dashboard-layout .stp .fill {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--line);
+}
+
+.fixovia-dashboard-layout .stp .fill {
+  right: auto;
+  background: var(--sun);
+  width: 0;
+  transition: width 0.7s ease;
+}
+
+.fixovia-dashboard-layout .stp div {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 60px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--mute);
+  font-weight: 500;
+}
+
+.fixovia-dashboard-layout .stp b {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 3px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  color: var(--mute);
+  transition: all 0.4s;
+}
+
+.fixovia-dashboard-layout .stp .d b {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+
+.fixovia-dashboard-layout .stp .c b {
+  border-color: var(--sun);
+  color: var(--sun);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--sun) 22%, transparent);
+  animation: dashPulse 1.6s infinite;
+}
+
+.fixovia-dashboard-layout .stp .d,
+.fixovia-dashboard-layout .stp .c {
+  color: var(--ink);
+}
+
+@keyframes dashPulse {
+  50% { box-shadow: 0 0 0 10px transparent; }
+}
+
+.fixovia-dashboard-layout .pro {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--bg2);
+}
+
+.fixovia-dashboard-layout .pro.wait .av {
+  background: linear-gradient(90deg, var(--line), var(--bg), var(--line));
+  background-size: 200% 100%;
+  animation: dashShimmer 1.3s linear infinite;
+  color: transparent;
+}
+
+@keyframes dashShimmer {
+  to { background-position: -200% 0; }
+}
+
+.fixovia-dashboard-layout .pin {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.fixovia-dashboard-layout .pin b {
+  width: 48px;
+  height: 58px;
+  border-radius: 14px;
+  background: var(--bg2);
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+  font: 800 1.8rem 'Fraunces', serif;
+  transition: all 0.5s;
+}
+
+.fixovia-dashboard-layout .pin.on b {
+  background: var(--tealsoft);
+  border-color: var(--teal);
+  color: var(--teal);
+  transform: rotateX(360deg);
+}
+
+.fixovia-dashboard-layout .pin.on b:nth-child(2) {
+  transition-delay: 0.1s;
+}
+
+.fixovia-dashboard-layout .pin.on b:nth-child(3) {
+  transition-delay: 0.2s;
+}
+
+.fixovia-dashboard-layout .pin.on b:nth-child(4) {
+  transition-delay: 0.3s;
+}
+
+.fixovia-dashboard-layout .bill .r {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--slate);
+  font-size: 0.93rem;
+}
+
+.fixovia-dashboard-layout .bill .t {
+  border: 0;
+  color: var(--ink);
+  font: 800 1.4rem 'Fraunces', serif;
+  padding-top: 12px;
+}
+
+.fixovia-dashboard-layout .stars {
+  display: flex;
+  gap: 2px;
+}
+
+.fixovia-dashboard-layout .stars button {
+  border: 0;
+  background: none;
+  font-size: 1.7rem;
+  color: var(--line);
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.fixovia-dashboard-layout .stars button.on {
+  color: #f59e0b;
+}
+
+.fixovia-dashboard-layout .stars button:hover {
+  transform: scale(1.25);
+}
+
+.fixovia-dashboard-layout .list .it {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.fixovia-dashboard-layout .list .it:last-child {
+  border: 0;
+}
+
+.fixovia-dashboard-layout .list .it > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.fixovia-dashboard-layout .list small {
+  color: var(--mute);
+}
+
+.fixovia-dashboard-layout .ic {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--bg2);
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  flex: none;
+}
+
+.fixovia-dashboard-layout .st,
+.fixovia-dashboard-layout .star-rating {
+  color: #f59e0b;
+  letter-spacing: 2px;
+  font-size: 1rem;
+}
+
+/* ── Partner Section ── */
+.fixovia-dashboard-layout .sw {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.fixovia-dashboard-layout .sw input {
+  display: none;
+}
+
+.fixovia-dashboard-layout .sw span {
+  width: 56px;
+  height: 30px;
+  border-radius: 30px;
+  background: var(--line);
+  position: relative;
+  transition: background 0.3s;
+}
+
+.fixovia-dashboard-layout .sw span::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.3s;
+}
+
+.fixovia-dashboard-layout .sw input:checked + span {
+  background: var(--ok);
+}
+
+.fixovia-dashboard-layout .sw input:checked + span::after {
+  transform: translateX(26px);
+}
+
+.fixovia-dashboard-layout .stat small {
+  color: var(--slate);
+  font-weight: 500;
+}
+
+.fixovia-dashboard-layout .stat .n {
+  font: 800 2rem 'Fraunces', serif;
+  margin-top: 4px;
+}
+
+.fixovia-dashboard-layout .radar {
+  display: grid;
+  place-items: center;
+  padding: 34px 0;
+  text-align: center;
+  color: var(--slate);
+}
+
+.fixovia-dashboard-layout .radar .rd {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--coral2);
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  margin-bottom: 14px;
+}
+
+.fixovia-dashboard-layout .radar .rd::before,
+.fixovia-dashboard-layout .radar .rd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--coral2);
+  animation: dashPing 2.2s ease-out infinite;
+}
+
+.fixovia-dashboard-layout .radar .rd::after {
+  animation-delay: 1.1s;
+}
+
+@keyframes dashPing {
+  to { transform: scale(2.2); opacity: 0; }
+}
+
+.fixovia-dashboard-layout .job {
+  animation: dashPop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  border: 2px solid var(--sun);
+  border-radius: 20px;
+  padding: 18px;
+  position: relative;
+}
+
+@keyframes dashPop {
+  from { transform: scale(0.9); opacity: 0; }
+}
+
+.fixovia-dashboard-layout .job.ring {
+  animation: dashPop 0.5s both, dashGlow 1.2s ease-in-out infinite 0.5s;
+}
+
+@keyframes dashGlow {
+  50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--sun) 25%, transparent); }
+}
+
+.fixovia-dashboard-layout .cd {
+  height: 8px;
+  border-radius: 8px;
+  background: var(--bg2);
+  overflow: hidden;
+  margin: 14px 0 4px;
+}
+
+.fixovia-dashboard-layout .cd u {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--sun);
+  border-radius: 8px;
+}
+
+.fixovia-dashboard-layout .inp {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font: 700 1.2rem 'Plus Jakarta Sans', sans-serif;
+  padding: 0 16px;
+  margin-top: 8px;
+}
+
+.fixovia-dashboard-layout .inp:focus {
+  outline: 0;
+  border-color: var(--coral2);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--coral2) 18%, transparent);
+}
+
+.fixovia-dashboard-layout .shake {
+  animation: dashShk 0.4s;
+}
+
+@keyframes dashShk {
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-4px); }
+}
+
+/* ── Admin Section ── */
+.fixovia-dashboard-layout .bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 170px;
+  margin-top: 10px;
+}
+
+.fixovia-dashboard-layout .bars div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--mute);
+}
+
+.fixovia-dashboard-layout .bars i {
+  display: block;
+  width: 100%;
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(var(--sun), var(--coral2));
+  transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.fixovia-dashboard-layout .hb {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.88rem;
+  margin-top: 10px;
+}
+
+.fixovia-dashboard-layout .hb u {
+  display: block;
+  height: 10px;
+  border-radius: 10px;
+  background: var(--bg2);
+}
+
+.fixovia-dashboard-layout .hb u i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 10px;
+  background: var(--teal);
+  transition: width 1s ease;
+}
+
+.fixovia-dashboard-layout .kyc {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.45s, opacity 0.45s;
+}
+
+.fixovia-dashboard-layout .kyc > div {
+  overflow: hidden;
+}
+
+.fixovia-dashboard-layout .kyc.gone {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.fixovia-dashboard-layout .kyc .it {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.fixovia-dashboard-layout .feed .it {
+  animation: dashRise 0.5s both;
+}
+
+.fixovia-dashboard-layout .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+  animation: dashPulse 1.6s infinite;
+}
+
+/* ── Toast ── */
+.fixovia-dashboard-layout #toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 120px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 500;
+  z-index: 50;
+  transition: transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
+  max-width: 92vw;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.fixovia-dashboard-layout #toast.show {
+  transform: translate(-50%, 0);
+}
+
+/* Partner KYC Status Banner */
+.fixovia-dashboard-layout .partner-kyc-status-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #fde68a;
+  border-radius: 20px;
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: 0 4px 18px -4px rgba(217, 119, 6, 0.12);
+  animation: dashFadeIn 0.4s ease both;
+}
+
+.fixovia-dashboard-layout .kyc-banner-icon-col {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #fde68a;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.1);
+}
+
+.fixovia-dashboard-layout .kyc-banner-content {
+  flex: 1;
+}
+
+.fixovia-dashboard-layout .kyc-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #92400e;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.fixovia-dashboard-layout .kyc-pill-chip {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #b45309;
+}
+
+.fixovia-dashboard-layout .kyc-banner-desc {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #78350f;
+  margin: 0;
+}
+
+/* Dispatch Locked Card */
+.fixovia-dashboard-layout .kyc-dispatch-locked-card {
+  text-align: center;
+  padding: 36px 20px;
+  background: #ffffff;
+  border: 2px dashed #fde68a;
+  border-radius: 24px;
+  margin: 10px 0;
+}
+
+.fixovia-dashboard-layout .kyc-dispatch-locked-card .locked-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #fef3c7;
+  color: #d97706;
+  font-size: 1.8rem;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+}
+
+.fixovia-dashboard-layout .kyc-dispatch-locked-card h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.fixovia-dashboard-layout .kyc-dispatch-locked-card p {
+  color: var(--slate);
+  font-size: 0.94rem;
+  max-width: 440px;
+  margin: 0 auto 18px;
+  line-height: 1.5;
+}
+
+/* ── Responsive Breakpoints ── */
+@media (max-width: 1200px) {
+  .fixovia-dashboard-layout .nav-container {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .fixovia-dashboard-layout nav#nav.dash-nav-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .fixovia-dashboard-layout .g4 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fixovia-dashboard-layout .g2,
+  .fixovia-dashboard-layout .g3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .fixovia-dashboard-layout .nav-container {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .fixovia-dashboard-layout .nav-brand img {
+    height: 32px;
+  }
+  .fixovia-dashboard-layout .pv {
+    min-width: 200px;
+  }
+  .fixovia-dashboard-layout .pv button {
+    font-size: 0.74rem;
+    min-height: 30px;
+    padding: 0 6px;
+  }
+  .fixovia-dashboard-layout .me-info {
+    display: none;
+  }
+  .fixovia-dashboard-layout nav#nav.dash-nav-links {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding: 3px;
+    justify-content: space-around;
+  }
+  .fixovia-dashboard-layout nav#nav .nav-tab-btn {
+    padding: 0 10px;
+    font-size: 0.78rem;
+    min-height: 32px;
+  }
+  .fixovia-dashboard-layout .main {
+    padding: 18px 14px 60px;
+  }
+  .fixovia-dashboard-layout .g4 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fixovia-dashboard-layout .stp div {
+    width: 44px;
+    font-size: 0.62rem;
+  }
+  .fixovia-dashboard-layout .hb {
+    grid-template-columns: 76px 1fr 32px;
+  }
+}
+
+/* ── Profile Pages Styling (Customer, Partner, Admin) ── */
+.fixovia-dashboard-layout .profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: dashRise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.fixovia-dashboard-layout .profile-header-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+}
+
+.fixovia-dashboard-layout .profile-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.fixovia-dashboard-layout .profile-avatar-lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--coral2), #14b0b8);
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(13, 86, 203, 0.25);
+  flex: none;
+}
+
+.fixovia-dashboard-layout .profile-header-meta h2 {
+  font-size: 1.4rem;
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.fixovia-dashboard-layout .profile-header-meta p {
+  margin: 0 0 8px;
+  color: var(--slate);
+  font-size: 0.92rem;
+}
+
+.fixovia-dashboard-layout .profile-badges-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fixovia-dashboard-layout .profile-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.fixovia-dashboard-layout .profile-badge-pill.blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.fixovia-dashboard-layout .profile-badge-pill.amber {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.fixovia-dashboard-layout .profile-badge-pill.purple {
+  background: #faf5ff;
+  color: #7e22ce;
+  border-color: #e9d5ff;
+}
+
+.fixovia-dashboard-layout .profile-section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .fixovia-dashboard-layout .profile-section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fixovia-dashboard-layout .profile-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+.fixovia-dashboard-layout .profile-card h3 {
+  font-size: 1.12rem;
+  margin: 0 0 6px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fixovia-dashboard-layout .profile-card-desc {
+  font-size: 0.88rem;
+  color: var(--slate);
+  margin: 0 0 18px;
+}
+
+.fixovia-dashboard-layout .profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fixovia-dashboard-layout .profile-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .fixovia-dashboard-layout .profile-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fixovia-dashboard-layout .profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fixovia-dashboard-layout .profile-field label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.fixovia-dashboard-layout .profile-field input,
+.fixovia-dashboard-layout .profile-field select {
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.fixovia-dashboard-layout .profile-field input:focus,
+.fixovia-dashboard-layout .profile-field select:focus {
+  border-color: var(--coral2);
+  box-shadow: 0 0 0 3px rgba(13, 86, 203, 0.1);
+}
+
+.fixovia-dashboard-layout .profile-field input:disabled {
+  background: var(--bg2);
+  color: var(--slate);
+  cursor: not-allowed;
+}
+
+.fixovia-dashboard-layout .profile-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.fixovia-dashboard-layout .profile-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.fixovia-dashboard-layout .profile-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fixovia-dashboard-layout .profile-toggle-info b {
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.fixovia-dashboard-layout .profile-toggle-info small {
+  font-size: 0.8rem;
+  color: var(--mute);
+}
+
+.fixovia-dashboard-layout .profile-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex: none;
+}
+
+.fixovia-dashboard-layout .profile-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.fixovia-dashboard-layout .profile-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.fixovia-dashboard-layout .profile-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.fixovia-dashboard-layout .profile-switch input:checked + .profile-slider {
+  background-color: var(--coral2);
+}
+
+.fixovia-dashboard-layout .profile-switch input:checked + .profile-slider:before {
+  transform: translateX(20px);
+}
+
+.fixovia-dashboard-layout .profile-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fixovia-dashboard-layout *,
+  .fixovia-dashboard-layout *::before,
+  .fixovia-dashboard-layout *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

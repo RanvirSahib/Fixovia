@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+.vite/
 
 # Java / Maven
 target/
@@ -35,3 +36,8 @@ thumbs.db
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Verification Screenshots
+screenshot_*.png
+dash_*.png
+*.tmp.png

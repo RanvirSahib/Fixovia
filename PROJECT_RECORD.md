@@ -889,22 +889,106 @@ This document maintains an official, step-by-step chronological record of all ar
 
 ---
 
-## 📊 Current System Status Matrix
+### [Step 55] Dedicated Sub-Pages for All Dashboard Roles (Customer, Partner/Worker, Admin)
+- **Timestamp**: 2026-10-29 00:48:00 IST
+- **Action**:
+  - Transformed the stacked dashboard layout into isolated, dedicated sub-pages for every navigation tab across Customer, Partner, and Admin roles:
+    1. **Customer Dashboard Sub-Pages**:
+       - **Overview (`#customer/overview`)**: Displays exclusively the live active repair card, 6-step progress stepper (Requested -> Accepted -> On the way -> Arrived -> In progress -> Completed), assigned technician card (Raj Singh · 4.9 ★), Doorstep Safety PIN (`4 8 2 7`), itemized price summary breakdown (`₹972`), pro rating controls, and quick link to book new services.
+       - **Book (`#customer/book`)**: On-demand service booking catalog with 8 distinct service trades (Electrical, Plumbing, AC repair, Carpentry, Painting, Cleaning, Appliances, Pest Control) with detailed descriptions, starting prices ("From ₹199"), and Fixovia Service Guarantee security banner.
+       - **History (`#customer/history`)**: Itemized booking history records with clean 5-star ratings, job details, and downloadable GST tax invoices (`INV-2026-1042`).
+    2. **Partner / Worker Dashboard Sub-Pages**:
+       - **Dispatch (`#partner/dispatch`)**: Online/Offline availability toggle switch, live radar scanning idle state, 60s countdown incoming job request card, and 5-stage job execution workflow (Accepted -> On the way -> Arrived -> Safety PIN check -> Parts cost input -> Complete job).
+       - **Wallet (`#partner/wallet`)**: 3 earnings KPI stat cards (Today's earnings `₹1,240`, This week `₹8,490`, Pending payout `₹3,200`), linked primary bank account card (State Bank of India `•••• 4821`, IFSC `SBIN0001429`) with "Withdraw Instant Funds" action button, and weekly gross/net summary breakdown.
+       - **Ledger (`#partner/ledger`)**: Complete itemized transaction audit trail with credit icons, timestamps, and settlement amounts (`+₹650`, `+₹1,500`, `+₹520`).
+    3. **Admin Control Center Sub-Pages**:
+       - **Metrics (`#admin/metrics`)**: 4 KPI counters (Total users `12,480`, Active workers `1,236`, Pending KYC, Daily revenue `₹3,84,200`), weekly bookings dynamic bar chart (Mon-Sun), and regional city breakdown progress bars (Delhi-NCR, Mumbai, Bengaluru, Hyderabad, Pune).
+       - **KYC (`#admin/kyc`)**: Dedicated KYC verification queue with pending count chip, technician cards with verified ID proof and police check badges, and one-click Approve / Reject decision actions.
+       - **Activity (`#admin/activity`)**: Real-time operations audit stream with animated pulsing status dots, timestamps, and live simulated dispatch events.
+    4. **Horizontal Navbar State & Hash Routing**:
+       - Connected horizontal navbar tabs (`.nav-tab-btn`) to `handleNavTabClick(tabId)` which updates state and URL hash (`#customer/overview`, `#customer/book`, `#customer/history`, `#partner/dispatch`, `#partner/wallet`, `#partner/ledger`, `#admin/metrics`, `#admin/kyc`, `#admin/activity`).
+       - Supported full browser Back/Forward navigation with `hashchange` listeners in `App.jsx` and `DashboardPage.jsx`.
+    5. **Styling Polish & Bug Fixes**:
+       - Fixed quick category button (`.qb`) price line breaking with block display and proper spacing.
+       - Resolved CSS class name collision where `.st` from `sample_style.css` caused a blue counter circle with "1" to appear next to booking history stars; migrated to `.star-rating` in `DashboardPage.jsx` and `dashboards.css` for clean golden stars.
+    6. **Browser Verification & Cleanup Compliance**:
+       - Visual inspection performed across all 9 sub-pages in headless Chrome.
+       - Strictly complied with user policy: immediately deleted all temporary screenshot captures (`subpage_*.png`) and test scripts after visual inspection.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 734ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
 
-| Component | Port / Path | State | Verification Method |
-| :--- | :--- | :--- | :--- |
-| **Frontend Web App** | `http://localhost:5173` | 🟢 ONLINE | HTTP 200 OK via Vite Dev Server |
-| **Toast Notifications** | Global Alert Layer | 🟢 SNAPPY (1.2s–1.4s) | Duration reduced from 4.0s to 1.2s–1.4s with smooth fade/slide-out |
-| **Custom Sort Dropdown** | `http://localhost:5173/#find` | 🟢 MODERN DROPDOWN | Replaced raw browser `<select>` with glassmorphic popover & vector icons |
-| **Hero Service Selector** | `http://localhost:5173` | 🟢 MODERN DROPDOWN | Upgraded to custom animated dropdown |
-| **Password Visibility Toggle** | `http://localhost:5173/#login` | 🟢 MODERN SVG | Replaced emoji eye with vector SVG Eye & EyeOff icons |
-| **Mobile Phone Layout** | Viewports <= 560px / 768px | 🟢 RESPONSIVE | Top navbar & hero house illustration hidden on phone view; clean compact margins |
-| **Global Transitions** | Site-wide | 🟢 ONLINE | Smooth page fades, hover lifts, active tap transforms & modal overlays |
-| **Dedicated Auth Page** | `http://localhost:5173/#login` | 🟢 ONLINE | Customer photo shifted upward; smooth synchronized 0.7s sliding position swap |
-| **Find Pros Page** | `http://localhost:5173/#find` | 🟢 ONLINE | Clean interface without odd "Guest Mode" banners; standard "Book Now →" with safe login guard |
-| **Service Areas** | Throughout App & Footer | 🟢 PUNJAB ONLY | Ludhiana, Amritsar, Jalandhar, Patiala, Mohali, Bathinda, Pathankot, Hoshiarpur, Zirakpur, Khanna, Phagwara |
-| **Services Page** | `http://localhost:5173/#services` | 🟢 ONLINE | All Book buttons guarded; redirects unauthenticated visitors to login page |
-| **Service Booking Modal** | `http://localhost:5173/#services` / `Find Pros` | 🟢 ONLINE | Google Pay single-tick payment confirmation with expanding ripples, tick draw & Safety PIN |
+---
+
+### [Step 56] Interactive Forgot Password Card with Email/Mobile Recovery & Confirmation State
+- **Timestamp**: 2026-10-29 07:02:00 IST
+- **Action**:
+  - Built a dedicated, interactive **Forgot Password Card** on the authentication console ([`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx) & [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css)):
+    1. **Trigger & Deep Linking**:
+       - Clicking `"Forgot password?"` on the login card transitions seamlessly into the dedicated Forgot Password card view without page reload.
+       - Integrated hash sync: navigates to `#forgot`, updating browser history so back/forward button returns to the sign-in form naturally.
+       - Updated [`App.jsx`](file:///c:/Fixovia/frontend/src/App.jsx) to recognize `#forgot` and route directly to the authentication view.
+    2. **Forgot Password Card UI & Form**:
+       - **Navigation**: Pill-shaped `← Back to sign in` button with hover transform at top-left.
+       - **Visual Badge**: Circular gradient lock emblem (`🔐`).
+       - **Header**: High-contrast title (`Forgot password?`) and supportive lead text instructing the user to enter their registered email address or mobile number.
+       - **Input**: Dual-purpose "Email or mobile number" input with validation for email format (`you@example.com`) and 10-digit Indian mobile numbers (`98765 43210`). Auto-populates if an email was already entered on the login screen.
+       - **CTA**: Saturated orange action button (`Send reset link / OTP`) with loading state and ripple click effects.
+       - **Footer**: Helper prompt with "Remembered your credentials? Sign in" shortcut.
+    3. **Success / Recovery Confirmation State**:
+       - Upon valid submission, transitions to an affirmative confirmation view:
+         - Circular emerald checkmark badge (`✓`) with soft elevation.
+         - Confirmation header: `Reset link sent!`.
+         - Message dynamically displaying the user's specific email or phone: `We've dispatched recovery instructions to {email/phone}`.
+         - Information callout box: `💡 Please check your inbox, spam folder, or SMS messages. The recovery link remains active for 15 minutes.`
+         - Action button: `Return to sign in`.
+         - Resend link: `Didn't receive it? Resend instructions` which triggers immediate toast confirmation.
+    4. **Pure White/Light Theme Compliance**:
+       - Styled strictly for the white/light theme with zero dark-mode rules.
+    5. **Browser Inspection & Cleanup Compliance**:
+       - Tested via headless Chrome across login, transition, input validation, and submission states.
+       - Adhered strictly to the cleanup rule: all temporary verification screenshots (`shot_*.png`) and test scripts were inspected and deleted immediately.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 1.32s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 57] Custom Modern Trade Dropdown for Partner Onboarding
+- **Timestamp**: 2026-10-29 07:12:00 IST
+- **Action**:
+  - Replaced the clunky default browser HTML `<select>` trade dropdown with a custom, high-fidelity popover dropdown on the Partner registration screen ([`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx) & [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css)):
+    1. **Modern Trigger & Pill Indicator**:
+       - Styled custom trigger button matching rounded input field dimensions (`min-height: 50px`, `border-radius: 14px`).
+       - Features an animated vector chevron icon (`⌄`) that rotates 180° smoothly when the menu is open.
+       - Formats the selected trade with its colorful trade icon badge (e.g. `⚡ Electrician`).
+    2. **Floating Trade Catalog Popover**:
+       - Replaced native grey rectangular options with a floating card (`border-radius: 18px`, `box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.2)`).
+       - Features 6 trades:
+         - ⚡ **Electrician** (`Wiring, MCBs, fans, switches`)
+         - 🔧 **Plumber** (`Leaks, taps, pipes, geysers`)
+         - ❄️ **AC technician** (`Deep cleaning, gas refill, PCB`)
+         - 🔨 **Carpenter** (`Furniture, locks, fittings`)
+         - 🎨 **Painter** (`Waterproofing, walls & woodwork`)
+         - 🧹 **Deep Cleaner** (`Kitchen & bathroom deep cleaning`)
+       - Each option row includes a rounded icon badge, bold title, descriptive specialties, hover lift animation, and an emerald/coral checkmark indicator (`✓`) on the active item.
+    3. **Container Overflow & Accessibility Adjustments**:
+       - Resolved container clipping by configuring `.auth-signin-page .opt.show > div` and `.card` to allow visible overflow for popover elevation.
+       - Integrated click-outside detection and `Escape` key listeners via `tradeRef`.
+    4. **Browser Inspection & Cleanup Compliance**:
+       - Visual inspection performed across closed, opened popover, and selected states using headless Chrome.
+       - Strictly complied with cleanup rule: deleted all temporary screenshots (`shot_*.png`) and test scripts immediately after visual inspection.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 1.11s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
 ### [Step 47] Mobile Phone Margin & Padding Streamlining Across All Pages
 - **Timestamp**: 2026-10-22 22:54:00 IST
 - **Action**:
@@ -970,11 +1054,847 @@ This document maintains an official, step-by-step chronological record of all ar
 
 ---
 
+### [Step 50] Sign-in Page Overhaul with Official HTML Template Parity
+- **Timestamp**: 2026-10-28 22:45:00 IST
+- **Action**:
+  - Fully transformed the authentication experience at `http://localhost:5173/#login` matching the design and interactions of [`C:\Fixovia\Fixovia – Sign in.html`](file:///C:/Fixovia/Fixovia%20–%20Sign%20in.html):
+    1. **Two-Column Split Layout**:
+       - Left branding & social proof pane (`.left`) featuring the official Fixovia logo, high-converting testimonial card by Priya Sharma (Sector 56, Gurugram), and three animated trust chips (`4.9★ Average rating`, `100% Background verified`, `₹10,000 Damage cover`).
+       - Right authentication pane (`.right`) featuring Customer ↔ Partner segmented role switcher with fluid sliding indicator pill, Phone / Email authentication tabs, real-time OTP countdown timer (30s), input formatting for +91 phone numbers, and Google / Apple social login buttons.
+    2. **Dedicated Modular Stylesheet**: Created [`frontend/src/styles/signin.css`](file:///C:/Fixovia/frontend/src/styles/signin.css) encapsulating all scoped tokens (`--bg`, `--card`, `--ink`, `--slate`, `--mute`, `--coral2`, `--teal`, `--sun`), CSS animations (`rise`, `pulse`, `flip`), and dark theme overrides (`data-theme="dark"` and `prefers-color-scheme: dark`).
+    3. **Seamless State & Auth Persistence**: Integrated authentication success callbacks into `AuthPage.jsx` updating global user state and smoothly routing to `#dashboard`.
+    4. **Visual Regression Verification**: Captured headless Chrome screenshots (`auth_original.png` vs `auth_react.png`), confirming 100% visual parity across typography, spacing, inputs, and button aesthetics.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 51] Multi-Role Unified Dashboard Migration & Polish (`Fixovia – Dashboards.html`)
+- **Timestamp**: 2026-10-28 23:45:00 IST
+- **Action**:
+  - Migrated the complete multi-role dashboard template from [`C:\Fixovia\Fixovia – Dashboards.html`](file:///C:/Fixovia/Fixovia%20–%20Dashboards.html) into a unified, interactive React architecture at `http://localhost:5173/#dashboard` (also supporting `#customer`, `#partner`, `#admin`):
+    1. **Modular Stylesheet Architecture**: Created [`frontend/src/styles/dashboards.css`](file:///C:/Fixovia/frontend/src/styles/dashboards.css) containing all responsive layout rules, CSS variables, dark theme overrides, custom radar spinners, stepper lines, 3D flip PIN cards, metric stat cards, and toast notification styles.
+    2. **Unified Dashboard Component ([`DashboardPage.jsx`](file:///C:/Fixovia/frontend/src/pages/DashboardPage.jsx))**:
+       - **Top 3-Role Preview Switcher**: Features a smooth sliding pill toggle (`Customer`, `Partner`, `Admin`) allowing instant switching between all three user perspectives.
+       - **Dynamic Left Navigation**: Context-aware navigation links for each role (`Overview`, `Book`, `History` for Customer; `Dispatch`, `Wallet`, `Ledger` for Partner; `Metrics`, `KYC`, `Activity` for Admin).
+       - **User Identity & Sign Out**: Dynamic avatar badge with initials (`AS`, `RS`, `AD`), user name, role subtitle, and sign-out handler.
+    3. **Customer Portal Experience**:
+       - 4 Quick-book category cards (`Electrical`, `Plumbing`, `AC repair`, `Carpentry`) with icon badges and starting prices.
+       - 6-step interactive booking lifecycle stepper (`Requested` → `Accepted` → `On the way` → `Arrived` → `In progress` → `Completed`) with live radar spinner.
+       - Verified pro card (Ramesh Kumar, 4.9★, 842 repairs) with direct Call / WhatsApp actions.
+       - 3D Doorstep Safety PIN card with click-to-flip interaction displaying secure PIN `4827`.
+       - Real-time itemized price summary (Base labor, Parts estimate, GST 18%, Platform fee, Total ₹972).
+       - 5-Star interactive review rating widget and booking history table.
+    4. **Partner / Pro Workspace Experience**:
+       - Online/Offline availability toggle switch.
+       - Earnings overview cards: Today's earnings (`₹2,150`), This week (`₹11,480`), Pending payout (`₹1,260`).
+       - Radar job-search idle animation with 60-second incoming job dispatch countdown card.
+       - 5-step job workflow execution: Accept job → Arrived at doorstep → Customer PIN verification (validates against `4827` with error shake on invalid PIN) → In progress work with parts cost entry → Job completion and wallet credit (`+₹499`).
+       - Complete transaction ledger table with settlement badges.
+    5. **Admin Control Center Experience**:
+       - 4 Top metric counter cards (Total users `12,480`, Active workers `1,236`, Pending KYC `4`, Daily revenue `₹3,84,200`).
+       - Weekly bookings vertical bar chart with gradient bars and animated height indicators.
+       - Horizontal city breakdown progress bars (Delhi-NCR `92%`, Mumbai `78%`, Bengaluru `71%`, Hyderabad `54%`, Pune `41%`).
+       - Live interactive KYC verification queue with animated slide-out on Approve/Reject and pending count badge update.
+       - Auto-rotating live activity feed with real-time incident updates.
+    6. **Routing & Sub-Dashboard Integration**:
+       - Updated [`frontend/src/App.jsx`](file:///C:/Fixovia/frontend/src/App.jsx) hash routing to render `DashboardPage` as a focused standalone full-page view without marketing navbar/footer interference.
+       - Re-exported initial role variants in [`CustomerDashboard.jsx`](file:///C:/Fixovia/frontend/src/pages/CustomerDashboard.jsx), [`WorkerDashboard.jsx`](file:///C:/Fixovia/frontend/src/pages/WorkerDashboard.jsx), and [`AdminDashboard.jsx`](file:///C:/Fixovia/frontend/src/pages/AdminDashboard.jsx).
+    7. **Visual Polish & Defect Remediation**:
+       - Fixed sidebar navigation `<button>` styling by binding `.fixovia-dashboard-layout nav#nav button` to eliminate browser user-agent border and background artifacts.
+       - Fixed vertical bar chart heights by utilizing flex column alignment with explicit pixel heights (`${Math.round(val * 1.3)}px`).
+       - Verified rendering fidelity across light theme, dark theme (`data-theme="dark"`), and mobile viewport (390px) via automated Chrome DevTools Protocol screenshot captures (`dash_react_customer.png`, `dash_react_partner.png`, `dash_react_admin.png`, `dash_react_dark.png`, `dash_react_mobile.png`).
+    8. **Build Verification**: Executed `npm run build` in `frontend` (50 modules transformed cleanly in 1.19s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx` (New)
+  - `C:\Fixovia\frontend\src\styles\dashboards.css` (New)
+  - `C:\Fixovia\frontend\src\pages\CustomerDashboard.jsx`
+  - `C:\Fixovia\frontend\src\pages\WorkerDashboard.jsx`
+  - `C:\Fixovia\frontend\src\pages\AdminDashboard.jsx`
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 52] Enhanced Animations for Customer ↔ Partner Switch & Sign In Interactions
+- **Timestamp**: 2026-10-29 00:03:00 IST
+- **Action**:
+  - Implemented high-fidelity spring animations and tactile transitions for the authentication card on `http://localhost:5173/#login`:
+    1. **Customer ↔ Partner Segmented Switch Transition**:
+       - **Spring-Physics Indicator Pill**: Upgraded `.tabs .pill` to an organic spring curve (`cubic-bezier(0.34, 1.45, 0.64, 1)`) with a soft drop-shadow (`0 4px 14px -2px rgba(13, 86, 203, 0.45)`).
+       - **Tab Button Micro-Tap Feedback**: Added interactive active depression (`:active { transform: scale(0.93); }`) on tab buttons.
+       - **Directional Cross-Slide**: Added smooth directional slide & cross-fade animations (`.slide-to-partner` and `.slide-to-customer`) for the card title (`#ttl`) and description (`#lead`) that translate dynamically based on toggle direction.
+       - **Field Pulse & Highlight Glow**: Added `.field-highlight` animation on email and password inputs when switching roles, providing subtle visual feedback that prefilled credentials have updated.
+    2. **Sign In Button Interactive Micro-Interactions**:
+       - **Tactile Click Depression**: Added snappy active click state (`:active { transform: scale(0.96) translateY(1px); box-shadow: 0 4px 12px -4px var(--sun); }`).
+       - **Dynamic Click Ripple**: Implemented coordinate-based expanding radial ripple effect (`.btn-ripple` with `@keyframes rippleSpread`) blossoming outward from the exact click location.
+       - **Breathing Pulse Loading State**: Added smooth text slide-up (`transform: translateY(-8px); opacity: 0;`) and luminous spinner animation with pulsating breathing glow (`@keyframes authBtnPulse`) during submission.
+    3. **Automated Verification & Immediate Cleanup**:
+       - Verified transition rendering via automated Chrome DevTools Protocol execution.
+       - Enforced user-directed cleanup policy by immediately removing all temporary screenshot artifacts (`temp_test_*.png`, `verify_anim.mjs`).
+       - Configured `.gitignore` rules to safeguard repository hygiene.
+  - Verified compilation via `npm run build` in `frontend` (50 modules transformed cleanly in 4.56s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\.gitignore`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 53] Dashboard Sidebar to Top Horizontal Navbar Transformation
+- **Timestamp**: 2026-10-29 00:12:00 IST
+- **Action**:
+  - Re-engineered the dashboard layout across all roles (`#dashboard`, `#customer`, `#partner`, `#admin`), converting the left vertical sidebar into a top horizontal navigation bar:
+    1. **Horizontal Header Architecture ([`dash-navbar`](file:///C:/Fixovia/frontend/src/pages/DashboardPage.jsx))**:
+       - Replaced vertical `aside.side` and two-column grid (`240px 1fr`) with a full-width sticky top navbar (`header.dash-navbar`).
+       - **Left**: Fixovia brand logo linking directly to `#home`.
+       - **Center**: Horizontal pill navigation bar (`nav#nav.dash-nav-links`) with active pill highlights (`Overview`, `Book`, `History` for Customer; `Dispatch`, `Wallet`, `Ledger` for Partner; `Metrics`, `KYC`, `Activity` for Admin).
+       - **Right**: Integrated 3-Role Preview Switcher (`Customer` | `Partner` | `Admin`), dark/light theme toggle button (`◐`), and compact user identity card (`.me`) with avatar initials, technician/customer name, role tag, and "Sign out" action.
+    2. **Max-Width Centered Content Layout**:
+       - Shifted `<main className="main">` from constrained sidebar offset to a centered layout (`max-width: 1440px; margin: 0 auto; padding: 24px 28px 60px;`).
+       - Category cards, active booking stepper, radar dispatch cards, and control center charts have full horizontal breathing room.
+    3. **Responsive Adaptation**:
+       - Added fluid multi-tier media queries (desktop 1440px, tablet 1200px, and mobile 767px) where nav links wrap smoothly into horizontal swipeable pills without vertical crowding.
+    4. **Automated Verification & Immediate Cleanup**:
+       - Verified layout parity across Customer and Partner views via Chrome DevTools Protocol.
+       - Enforced user-directed screenshot cleanup policy: deleted all temporary test screenshot files immediately upon review.
+  - Verified production build via `npm run build` in `frontend` (50 modules transformed in 1.51s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 54] Global White/Light Theme Standardization & Complete Dark Theme Elimination
+- **Timestamp**: 2026-10-29 00:25:00 IST
+- **Action**:
+  - Standardized the entire Fixovia platform onto a single, clean white/light theme and completely removed all dark mode code, toggles, and media query overrides:
+    1. **Document-Level Theme Locking**:
+       - Updated [`frontend/index.html`](file:///C:/Fixovia/frontend/index.html) with `<html lang="en" data-theme="light">` and `<meta name="color-scheme" content="light" />`.
+    2. **Removal of All Theme Switcher Controls**:
+       - Removed `<ThemeToggle />` component and theme toggle button from [`frontend/src/components/common/Navbar.jsx`](file:///C:/Fixovia/frontend/src/components/common/Navbar.jsx).
+       - Removed theme state and `#theme` toggle button from [`frontend/src/pages/AuthPage.jsx`](file:///C:/Fixovia/frontend/src/pages/AuthPage.jsx).
+       - Removed theme state and `#theme` toggle button from the top horizontal dashboard navbar in [`frontend/src/pages/DashboardPage.jsx`](file:///C:/Fixovia/frontend/src/pages/DashboardPage.jsx).
+    3. **Purged Dark Theme CSS Rules**:
+       - **[`globals.css`](file:///C:/Fixovia/frontend/src/styles/globals.css)**: Removed `@media (prefers-color-scheme: dark)` and `:root[data-theme="dark"]` property definitions, `:root[data-theme="dark"] .logo img`, and dark theme mesh background overrides; locked `:root` to `color-scheme: light`.
+       - **[`dashboards.css`](file:///C:/Fixovia/frontend/src/styles/dashboards.css)**: Removed all `:root[data-theme="dark"]` rules and `@media (prefers-color-scheme: dark)` overrides; locked dashboard layout to `color-scheme: light`.
+       - **[`signin.css`](file:///C:/Fixovia/frontend/src/styles/signin.css)**: Removed `:root[data-theme="dark"]` and `@media (prefers-color-scheme: dark)` blocks; locked auth page to `color-scheme: light`.
+       - **[`sample_style.css`](file:///C:/Fixovia/frontend/src/styles/sample_style.css)**: Stripped dark theme rules and forced `color-scheme: light`.
+    4. **Comprehensive Multi-Page Visual Verification & Immediate Artifact Cleanup**:
+       - Captured headless Chrome screenshots across all key routes: `#home`, `#services`, `#find`, `#login`, and `#dashboard`.
+       - Analyzed all captures, confirming zero dark-mode artifacts, crisp high-contrast typography, and consistent brand aesthetic across all pages.
+       - Strictly adhered to user cleanup policy: immediately deleted all temporary screenshot captures (`temp_white_*.png`, `verify_white_theme.mjs`).
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 692ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\index.html`
+  - `C:\Fixovia\frontend\src\components\common\Navbar.jsx`
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\globals.css`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\frontend\src\styles\sample_style.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 55] Dedicated Sub-Pages for All Dashboard Roles (Customer, Partner/Worker, Admin)
+- **Timestamp**: 2026-10-29 00:48:00 IST
+- **Action**:
+  - Transformed the stacked dashboard layout into isolated, dedicated sub-pages for every navigation tab across Customer, Partner, and Admin roles:
+    1. **Customer Dashboard Sub-Pages**:
+       - **Overview (`#customer/overview`)**: Displays exclusively the live active repair card, 6-step progress stepper (Requested -> Accepted -> On the way -> Arrived -> In progress -> Completed), assigned technician card (Raj Singh · 4.9 ★), Doorstep Safety PIN (`4 8 2 7`), itemized price summary breakdown (`₹972`), pro rating controls, and quick link to book new services.
+       - **Book (`#customer/book`)**: On-demand service booking catalog with 8 distinct service trades (Electrical, Plumbing, AC repair, Carpentry, Painting, Cleaning, Appliances, Pest Control) with detailed descriptions, starting prices ("From ₹199"), and Fixovia Service Guarantee security banner.
+       - **History (`#customer/history`)**: Itemized booking history records with clean 5-star ratings, job details, and downloadable GST tax invoices (`INV-2026-1042`).
+    2. **Partner / Worker Dashboard Sub-Pages**:
+       - **Dispatch (`#partner/dispatch`)**: Online/Offline availability toggle switch, live radar scanning idle state, 60s countdown incoming job request card, and 5-stage job execution workflow (Accepted -> On the way -> Arrived -> Safety PIN check -> Parts cost input -> Complete job).
+       - **Wallet (`#partner/wallet`)**: 3 earnings KPI stat cards (Today's earnings `₹1,240`, This week `₹8,490`, Pending payout `₹3,200`), linked primary bank account card (State Bank of India `•••• 4821`, IFSC `SBIN0001429`) with "Withdraw Instant Funds" action button, and weekly gross/net summary breakdown.
+       - **Ledger (`#partner/ledger`)**: Complete itemized transaction audit trail with credit icons, timestamps, and settlement amounts (`+₹650`, `+₹1,500`, `+₹520`).
+    3. **Admin Control Center Sub-Pages**:
+       - **Metrics (`#admin/metrics`)**: 4 KPI counters (Total users `12,480`, Active workers `1,236`, Pending KYC, Daily revenue `₹3,84,200`), weekly bookings dynamic bar chart (Mon-Sun), and regional city breakdown progress bars (Delhi-NCR, Mumbai, Bengaluru, Hyderabad, Pune).
+       - **KYC (`#admin/kyc`)**: Dedicated KYC verification queue with pending count chip, technician cards with verified ID proof and police check badges, and one-click Approve / Reject decision actions.
+       - **Activity (`#admin/activity`)**: Real-time operations audit stream with animated pulsing status dots, timestamps, and live simulated dispatch events.
+    4. **Horizontal Navbar State & Hash Routing**:
+       - Connected horizontal navbar tabs (`.nav-tab-btn`) to `handleNavTabClick(tabId)` which updates state and URL hash (`#customer/overview`, `#customer/book`, `#customer/history`, `#partner/dispatch`, `#partner/wallet`, `#partner/ledger`, `#admin/metrics`, `#admin/kyc`, `#admin/activity`).
+       - Supported full browser Back/Forward navigation with `hashchange` listeners in `App.jsx` and `DashboardPage.jsx`.
+    5. **Styling Polish & Bug Fixes**:
+       - Fixed quick category button (`.qb`) price line breaking with block display and proper spacing.
+       - Resolved CSS class name collision where `.st` from `sample_style.css` caused a blue counter circle with "1" to appear next to booking history stars; migrated to `.star-rating` in `DashboardPage.jsx` and `dashboards.css` for clean golden stars.
+    6. **Browser Verification & Cleanup Compliance**:
+       - Visual inspection performed across all 9 sub-pages in headless Chrome.
+       - Strictly complied with user policy: immediately deleted all temporary screenshot captures (`subpage_*.png`) and test scripts after visual inspection.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 734ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 56] Interactive Forgot Password Card with Email/Mobile Recovery & Confirmation State
+- **Timestamp**: 2026-10-29 07:02:00 IST
+- **Action**:
+  - Built a dedicated, interactive **Forgot Password Card** on the authentication console ([`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx) & [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css)):
+    1. **Trigger & Deep Linking**:
+       - Clicking `"Forgot password?"` on the login card transitions seamlessly into the dedicated Forgot Password card view without page reload.
+       - Integrated hash sync: navigates to `#forgot`, updating browser history so back/forward button returns to the sign-in form naturally.
+       - Updated [`App.jsx`](file:///c:/Fixovia/frontend/src/App.jsx) to recognize `#forgot` and route directly to the authentication view.
+    2. **Forgot Password Card UI & Form**:
+       - **Navigation**: Pill-shaped `← Back to sign in` button with hover transform at top-left.
+       - **Visual Badge**: Circular gradient lock emblem (`🔐`).
+       - **Header**: High-contrast title (`Forgot password?`) and supportive lead text instructing the user to enter their registered email address or mobile number.
+       - **Input**: Dual-purpose "Email or mobile number" input with validation for email format (`you@example.com`) and 10-digit Indian mobile numbers (`98765 43210`). Auto-populates if an email was already entered on the login screen.
+       - **CTA**: Saturated orange action button (`Send reset link / OTP`) with loading state and ripple click effects.
+       - **Footer**: Helper prompt with "Remembered your credentials? Sign in" shortcut.
+    3. **Success / Recovery Confirmation State**:
+       - Upon valid submission, transitions to an affirmative confirmation view:
+         - Circular emerald checkmark badge (`✓`) with soft elevation.
+         - Confirmation header: `Reset link sent!`.
+         - Message dynamically displaying the user's specific email or phone: `We've dispatched recovery instructions to {email/phone}`.
+         - Information callout box: `💡 Please check your inbox, spam folder, or SMS messages. The recovery link remains active for 15 minutes.`
+         - Action button: `Return to sign in`.
+         - Resend link: `Didn't receive it? Resend instructions` which triggers immediate toast confirmation.
+    4. **Pure White/Light Theme Compliance**:
+       - Styled strictly for the white/light theme with zero dark-mode rules.
+    5. **Browser Inspection & Cleanup Compliance**:
+       - Tested via headless Chrome across login, transition, input validation, and submission states.
+       - Adhered strictly to the cleanup rule: all temporary verification screenshots (`shot_*.png`) and test scripts were inspected and deleted immediately.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 1.32s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+---
+
+### [Step 57] Custom Modern Trade Dropdown for Partner Onboarding
+- **Timestamp**: 2026-10-29 07:12:00 IST
+- **Action**:
+  - Replaced the clunky default browser HTML `<select>` trade dropdown with a custom, high-fidelity popover dropdown on the Partner registration screen ([`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx) & [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css)):
+    1. **Modern Trigger & Pill Indicator**:
+       - Styled custom trigger button matching rounded input field dimensions (`min-height: 50px`, `border-radius: 14px`).
+       - Features an animated vector chevron icon (`⌄`) that rotates 180° smoothly when the menu is open.
+       - Formats the selected trade with its colorful trade icon badge (e.g. `⚡ Electrician`).
+    2. **Floating Trade Catalog Popover**:
+       - Replaced native grey rectangular options with a floating card (`border-radius: 18px`, `box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.2)`).
+       - Features 6 trades:
+         - ⚡ **Electrician** (`Wiring, MCBs, fans, switches`)
+         - 🔧 **Plumber** (`Leaks, taps, pipes, geysers`)
+         - ❄️ **AC technician** (`Deep cleaning, gas refill, PCB`)
+         - 🔨 **Carpenter** (`Furniture, locks, fittings`)
+         - 🎨 **Painter** (`Waterproofing, walls & woodwork`)
+         - 🧹 **Deep Cleaner** (`Kitchen & bathroom deep cleaning`)
+       - Each option row includes a rounded icon badge, bold title, descriptive specialties, hover lift animation, and an emerald/coral checkmark indicator (`✓`) on the active item.
+    3. **Container Overflow & Accessibility Adjustments**:
+       - Resolved container clipping by configuring `.auth-signin-page .opt.show > div` and `.card` to allow visible overflow for popover elevation.
+       - Integrated click-outside detection and `Escape` key listeners via `tradeRef`.
+    4. **Browser Inspection & Cleanup Compliance**:
+       - Visual inspection performed across closed, opened popover, and selected states using headless Chrome.
+       - Strictly complied with cleanup rule: deleted all temporary screenshots (`shot_*.png`) and test scripts immediately after visual inspection.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 1.11s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 58] OTP-Based Passwordless Verification for Customer & Partner Sign-in & Registration
+- **Timestamp**: 2026-10-29 07:25:00 IST
+- **Action**:
+  - Replaced legacy password authentication with a secure, passwordless 2-step OTP verification flow across Customer and Worker (Partner) login and registration portals on [`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx):
+    1. **Step 1 (Mobile Number / Email & Profile Collection)**:
+       - **Sign In (`up = false`)**: User provides their 10-digit mobile number or email address (e.g. `98765 43210` or `customer@fixovia.in`). Removed password fields and replaced with a prominent "Get OTP →" action button.
+       - **Registration (`up = true`)**: Customer inputs Full Name + Mobile Number; Worker (Partner) inputs Full Name + Mobile Number + Trade (utilizing the custom floating trade selection popover). Primary CTA changes to "Get OTP to apply →" or "Get OTP to register →".
+    2. **Step 2 (4-Digit Discrete OTP Verification View)**:
+       - Displays clear header with destination badge: `📱 Code sent to +91 98765 43210 [Edit]`.
+       - Rendered 4 discrete, high-contrast digit boxes (`[ _ ] [ _ ] [ _ ] [ _ ]`) with:
+         - Auto-advance to the next input on digit entry.
+         - Seamless Backspace handling (clearing and stepping back automatically).
+         - Full clipboard paste support (automatically distributing 4 digits across boxes).
+         - Visual focus glow and `.filled` state indicators.
+       - **Quick Demo Chip**: `🔑 Demo OTP: 4827 (Click to fill)` — one-click helper that immediately populates the 4 digits for rapid friction-free testing.
+       - **Live 30-Second Countdown & Resend Option**: Dynamic timer counting down from 30s (`Resend OTP in 28s`), automatically transforming into an active `Didn't get code? Resend OTP` trigger.
+    3. **Instant 1-Click Demo Accounts Integration**:
+       - Clicking `Customer`, `Partner`, or `Admin` pre-populates role details, transitions into Step 2 with `4827` loaded, allowing immediate 1-click verification.
+    4. **Celebration & Dashboard Navigation**:
+       - Verifies OTP via [`AuthContext.jsx`](file:///c:/Fixovia/frontend/src/context/AuthContext.jsx).
+       - Triggers Google Pay-style celebration circle checkmark (`✓ You’re in!`) and smoothly routes the user to the Customer Portal or Partner Workspace (`#customer` / `#partner`).
+    5. **Browser Verification & Strict Cleanup**:
+       - Verified all states in headless Chrome: Step 1 input, Step 2 OTP boxes, Demo OTP filling, Partner registration, and success redirect.
+       - Complied with user rule: immediately purged all temporary test scripts and screenshots.
+  - Verified production build via `npm run build` in `frontend` (49 modules transformed in 1.18s with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\frontend\src\context/AuthContext.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 59] Restored Original Left Hero Banner on Sign-in Page
+- **Timestamp**: 2026-10-29 16:45:00 IST
+- **Action**:
+  - Restored the exact original left-side hero panel text, script typography, and floating interactive stat widgets from [`Fixovia – Sign in.html`](file:///c:/Fixovia/Fixovia%20–%20Sign%20in.html) into [`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx):
+    1. **Script Typography & Headline**:
+       - Restored `<p className="hand">Welcome back</p>` with the warm cursive `Caveat` font.
+       - Restored `<h1>Your home’s repair crew, one tap away.</h1>`.
+       - Restored subtitle: `"Sign in to track your pro live, share your safety PIN and pay a clear, itemized bill."`.
+    2. **Original Floating Stat Cards (`.stack`)**:
+       - Card 1 (`.c1`): `✓ Pro verified` (`4.9 ★ · 7-point check`) with emerald check badge.
+       - Card 2 (`.c2`): `Your safety PIN` (`4827`) in Fraunces serif typography.
+       - Card 3 (`.c3`): `Rahul is on the way` (`Electrician · arrives in 18 min`) with dynamic animated progress bar (`.bar u`).
+    3. **Browser Verification & Cleanup**:
+       - Captured headless Chrome screenshot to verify 100% exact match with `Fixovia – Sign in.html`.
+       - Deleted temporary screenshot and test script immediately after inspection.
+  - Verified compilation via `npm run build` (0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 60] Added Email Field to Customer and Partner Account Registration
+- **Timestamp**: 2026-10-29 17:00:00 IST
+- **Action**:
+  - Integrated an explicit Email address input field into the account creation form for both Customer and Partner roles on [`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx):
+    1. **Registration Form Upgrades**:
+       - Added `<input id="regEmail" type="email" placeholder="aarav@example.com" />` positioned between Full name and Mobile number.
+       - Integrated email syntax validation (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) in `handleRequestOtp` with dynamic error highlighting.
+       - Configured `handleVerifyOtp` to forward the user-provided email to `register({ name, email: regEmail.trim(), phone, role, trade, otpVerified: true })`.
+    2. **Hash & Route Handling**:
+       - Enhanced initial route synchronization (`useState` & `useEffect`) to automatically mount the registration view when URL contains `#register` or `#signup`.
+    3. **Browser Inspection & Cleanup Compliance**:
+       - Verified both Customer registration and Partner registration screens in headless Chrome.
+       - Immediately purged all temporary screenshots (`temp_check_reg_*.png`) and verification test scripts.
+  - Verified compilation via `npm run build` (49 modules transformed in 710ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 61] Partner Verification Workflow (Aadhaar & PAN Document Upload, 24-Hour Review Gate, Dashboard Status Banner, and Booking Dispatch Lock)
+- **Timestamp**: 2026-10-29 17:25:00 IST
+- **Action**:
+  - Implemented the full partner onboarding verification process across [`AuthContext.jsx`](file:///c:/Fixovia/frontend/src/context/AuthContext.jsx), [`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx), [`DashboardPage.jsx`](file:///c:/Fixovia/frontend/src/pages/DashboardPage.jsx), [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css), and [`dashboards.css`](file:///c:/Fixovia/frontend/src/styles/dashboards.css):
+    1. **Partner KYC Profile Completion Card (`AuthPage.jsx` & `signin.css`)**:
+       - When creating a Partner account, after completing OTP verification (`4827`), the user is guided to a dedicated **"Complete your partner profile"** KYC card.
+       - Built two document upload dropzones: **Aadhaar Card** (with 12-digit format mask and file attachment) and **PAN Card** (with 10-character PAN uppercase alphanumeric mask and file attachment).
+       - Added drag-and-drop file uploaders with file name, file size badges, and remove actions.
+       - Included a convenient 1-click `"Use sample document details (Dev mode)"` chip for immediate testing.
+    2. **24-Hour Under Verification State Screen**:
+       - Upon document submission, transitions into an informative checking state:
+         > *"Your account is under checking. It will go through the verification process and will work in under 24 hours."*
+       - Includes an animated clock pulse badge, safety confirmation tags, and a direct action button: **"Explore Partner Workspace →"**.
+    3. **Partner Dashboard Verification Gate & Banner (`DashboardPage.jsx` & `dashboards.css`)**:
+       - Displays a prominent status banner at the top of the Partner Dashboard:
+         > **"Your account is under verification process" [Under Checking · 24h Approval]**
+         > *"Your Aadhaar Card and PAN Card have been submitted and are being reviewed by the Fixovia Admin team. You can freely explore features, rate cards, and tools in your workspace, but you cannot accept customer bookings until verification is approved."*
+       - Disables the online/offline duty toggle with a locked indicator (`Under Verification ⏳`).
+       - In the Job Dispatch radar section, locks booking acceptance with a dedicated **"Booking Dispatch Paused"** card while providing direct navigation links to explore the **Partner Wallet** and **Payment Ledger**.
+    4. **Admin KYC Queue Integration (`DashboardPage.jsx`)**:
+       - Newly registered partners with `kycStatus: 'under_verification'` are dynamically placed into the Fixovia Admin KYC Queue (`#admin/kyc`).
+       - Admins can inspect the Aadhaar and PAN numbers and trigger instant approval or rejection.
+    5. **Browser Verification & Screenshot Rule Compliance**:
+       - Verified document card, checking message, and dashboard dispatch lock in headless Chrome.
+       - Immediately purged all temporary screenshot files (`temp_*.png`) and test scripts (`test_*.mjs`) adhering strictly to the user requirement.
+  - Verified compilation via `npm run build` (0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\context\AuthContext.jsx`
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 62] Removed Explore Mode Notice Box from Partner Verification Checking Screen
+- **Timestamp**: 2026-10-29 17:48:00 IST
+- **Action**:
+  - Removed the yellow notice box (`"Explore Mode Active: You can explore all features..."`) from the Partner KYC document submission checking card in [`AuthPage.jsx`](file:///c:/Fixovia/frontend/src/pages/AuthPage.jsx) and [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css):
+    1. **Clean Checking Confirmation**:
+       - The checking screen now strictly features the core message requested:
+         > **"Your account is under checking"**  
+         > *"It will go through the verification process and will work in under 24 hours."*
+       - Added an automatic smooth redirect timer (2.6s) to transition directly into the Partner Dashboard, accompanied by a clean `"Go to Dashboard →"` manual button and `"Redirecting to your dashboard in a moment…"` sub-caption.
+    2. **Stylesheet Cleanup**:
+       - Removed `.auth-signin-page .kyc-notice-box` from [`signin.css`](file:///c:/Fixovia/frontend/src/styles/signin.css) to eliminate unused CSS rules.
+    3. **Browser Inspection & Strict Cleanup Compliance**:
+       - Captured headless Chrome screenshot to verify the clean appearance of the updated checking screen with the notice box completely removed.
+       - Immediately purged all temporary screenshot files (`temp_*.png`) and test scripts (`test_*.mjs`, `read_step.mjs`).
+  - Verified compilation via `npm run build` (0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\AuthPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\signin.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 63] Upgraded Service Logos on Customer Book Services Page with Modern Vector Badges
+- **Timestamp**: 2026-11-13 13:25:00 IST
+- **Action**:
+  - Addressed user feedback requesting replacement of the generic emoji logos on [`http://localhost:5173/#customer/book`](file:///c:/Fixovia/frontend/src/pages/DashboardPage.jsx):
+    1. **Bespoke Trade Vector Logos (`TradeLogos.jsx`)**:
+       - Created dedicated modern vector SVG logos for all 8 on-demand service categories in [`TradeLogos.jsx`](file:///c:/Fixovia/frontend/src/components/common/TradeLogos.jsx):
+         - **Electrical (`ElectricalLogo`)**: High-voltage angular power bolt with multi-stop amber gradient (`#f59e0b` to `#ea580c`), inner bevel reflection, and energy nodes.
+         - **Plumbing (`PlumbingLogo`)**: Sanitary curved water pipeline with tap fixture, glistening drop (`#38bdf8` to `#0284c7`), and pipe wrench silhouette.
+         - **AC Repair (`ACRepairLogo`)**: Sleek split-inverter AC unit with cold airflow louvers and geometric frost snowflake crystal.
+         - **Carpentry (`CarpentryLogo`)**: Professional claw hammer with woodgrain textured handle paired with an architect try-square ruler.
+         - **Painting (`PaintingLogo`)**: Ergonomic paint roller with fresh coat swath, metal frame, and vibrant color droplets (`#fb7185` to `#e11d48`).
+         - **Cleaning (`CleaningLogo`)**: Angled micro-fiber straw broom with straw detailing, sparkling 4-point radiance stars, and hygiene luster bubbles.
+         - **Appliances (`AppliancesLogo`)**: Smart front-load washing machine with glass porthole drum, digital control panel, and maintenance service gear.
+         - **Pest Control (`PestControlLogo`)**: Protective bio-shield emblem with insect silhouette and green verification checkmark badge.
+    2. **Modern Logo Badges & Hover Physics (`DashboardPage.jsx` & `dashboards.css`)**:
+       - Replaced raw emojis with a dedicated `.qb-icon-badge` container (52x52px, 16px radius, soft pastel gradients matching each trade's brand palette with subtle 1.5px matching borders).
+       - Added smooth hover lift and micro-scale effect (`transform: scale(1.08) translateY(-2px)` with shadow elevation).
+       - Maintained pure white / light theme consistency throughout.
+    3. **Browser Verification & Screenshot Cleanup Compliance**:
+       - Captured headless Chrome screenshot of `http://localhost:5173/#customer/book` to verify visual aesthetics and alignment across all 8 service cards.
+       - Immediately purged all temporary screenshot files and test scripts in strict compliance with the user's rule.
+  - Verified compilation via `npm run build` (50 modules transformed in 761ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\common\TradeLogos.jsx` (New)
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 64] Implemented Dynamic "No Active Booking" Empty State & Booking Lifecycle on Customer Overview Page
+- **Timestamp**: 2026-11-13 13:35:00 IST
+- **Action**:
+  - Addressed user feedback requesting that [`http://localhost:5173/#customer/overview`](file:///c:/Fixovia/frontend/src/pages/DashboardPage.jsx) displays a clean "No active booking, book a new service" state when no repair is active:
+    1. **Empty State Screen (`DashboardPage.jsx` & `dashboards.css`)**:
+       - Added dynamic booking state tracking (`hasActiveBooking`, `activeBooking`).
+       - When no booking is active (`!hasActiveBooking`), rendered a clean empty-state card (`.no-booking-hero-card`) featuring:
+         - An elegant vector document/service badge (`.no-booking-icon-badge`).
+         - Primary title: **"No active booking"**.
+         - Subtitle: *"You don't have any active home repair or service requests scheduled right now. Book a verified professional to get doorstep service in under 60 minutes."*
+         - Primary CTA: **"Book a new service →"** (smoothly switches view to `#customer/book`).
+         - Secondary demo action: **"⚡ Simulate active booking"** (activates live demo repair tracking).
+         - Popular services quick-select row with the new vector trade logos (Electrical, Plumbing, AC repair, Carpentry) allowing direct 1-click booking requests right from the overview.
+    2. **Booking Lifecycle Integration**:
+       - Wired all 8 trade cards on the Book sub-page (`#customer/book`) to `handleBookService(title, price)`: clicking any service creates an active booking with that trade and price, updates `hasActiveBooking = true`, and transitions into the live 6-step tracking screen.
+       - Clicking **"Cancel booking"** resets `hasActiveBooking = false`, removes the localStorage active booking key, triggers a notification, and smoothly returns to the clean "No active booking" screen.
+       - Completing all 6 steps smoothly transitions back to overview.
+    3. **Browser Verification & Screenshot Cleanup Compliance**:
+       - Tested the empty state, the active booking simulator, and the cancellation flow in headless Chrome.
+       - Verified visual consistency and pure white theme alignment.
+       - Immediately purged all temporary screenshot files and test scripts.
+  - Verified compilation via `npm run build` (50 modules transformed in 781ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 65] Interactive Live GPS Radar Map & Worker List Integration upon Service Selection
+- **Timestamp**: 2026-11-13 14:02:00 IST
+- **Action**:
+  - Addressed user request: *"When the person clicks on these services then they are redirected to the new page where a map is shown that shows the location of the nearby workers and below that the list of that workers"*:
+    1. **Interactive Cartographic Radar Map Component (`NearbyWorkersMap` & `map.css`)**:
+       - Developed an interactive vector map at the top of the Find Pros page with roads, civic sectors, green parks, waterway stream, and animated user location pin (`📍 You are here · {selectedLocation}`).
+       - Plotted technician pins with trade colors, avatar initials, and distance tags (`1.4 km`).
+       - Interactive popup card on hover or click showing pro details, rating, visit charge, and quick "Show in List ↓" / "Book Now →" CTAs.
+       - Clicking a pin highlights the pro on the map and smoothly scrolls to their card in the list below.
+    2. **Category-Filtered Worker List Below Map**:
+       - Positioned full category filter tabs (Electrical, Plumbing, AC Repair, Carpentry, Painting, Cleaning, Appliances, Pest Control, All Services), search/sort controls, and verified pro cards grid directly **below the map**.
+    3. **Seamless Multi-Trade Navigation & Deep Linking (`App.jsx` & `DashboardPage.jsx`)**:
+       - Updated popular service cards on Customer Overview (`#customer/overview`) and Book sub-page (`#customer/book`) to route directly to `#find?trade={serviceName}`.
+  - Verified compilation via `npm run build` (51 modules transformed in 812ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\frontend\src\pages\FindWorkers.jsx`
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\map.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 66] Dynamic Distance Range Filter & Scalable Radar Perimeter on Find Pros Service Map
+- **Timestamp**: 2026-11-13 17:47:00 IST
+- **Action**:
+  - Addressed user request on [`http://localhost:5173/#find?trade=Electrical`](file:///c:/Fixovia/frontend/src/pages/FindWorkers.jsx): *"In this booking service the person can also change the range of distance he wants to check nearby"*:
+    1. **Interactive Radius Quick-Pills & Scalable Radar Perimeter**:
+       - Added a dedicated distance range selector group in the map header overlay with quick preset pills (`2 km`, `5 km`, `10 km`, `15 km`, `25+ km`).
+       - Implemented an animated dynamic SVG radar perimeter circle centered at user coordinates `(480, 300)` that scales seamlessly in real time when changing distance range.
+       - Updated user location label to display the active coverage boundary (`📍 You are here · {selectedLocation} (≤ {maxDistance} km)`).
+    2. **Continuous Distance Range Slider in Filter Controls**:
+       - Added a **Distance Radius** slider (`1 km` to `25 km`, step: `1 km`) with live numeric indicator (`Within {maxDistance} km` or `25+ km`) and teal accent in the search and filter bar below the map.
+       - Synced with the header preset pills and the worker filtering algorithm.
+    3. **Real-Time Map Pin & Worker Card Distance Filtering**:
+       - Connected `w.distance <= maxDistance` to the active filtering pipeline.
+       - Changing the distance radius immediately filters out technicians beyond that radius from both the map pins and the list cards below (e.g. setting 2 km keeps Raj Kumar at 1.4 km and removes technicians at 3.1 km).
+       - Updated filter reset button to reset radius to 10 km.
+    4. **Browser & Visual Verification**:
+       - Tested with headless Chrome on `#find?trade=Electrical`: verified 2 km radius filters to 1 technician, while 10 km reveals all available technicians. Verified map SVG perimeter circle scaling.
+       - Deleted all temporary test artifacts and screenshots immediately after verification per strict project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 749ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\FindWorkers.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 67] Context-Aware Clean Navbar for Authenticated Users
+- **Timestamp**: 2026-11-13 17:52:00 IST
+- **Action**:
+  - Addressed user feedback regarding navbar clutter when logged in: *"Once logged in i don't think we need these things in a navbar"* (showing marketing links: `Services`, `How it works`, `Safety PIN`, `Pricing`, `Find Pros`):
+    1. **Conditional Public vs. Authenticated Navbar Layout (`Navbar.jsx`)**:
+       - Wrapped the central marketing links `<ul>` with `{!user && ( ... )}` so that once any user logs in, the public promotional links are completely removed from the navbar.
+       - Public/guest visitors continue to see the full exploration links when unauthenticated.
+    2. **Elevated Logged-In User Controls**:
+       - Designed a clean, minimalist authenticated top bar matching modern SaaS/dashboard design standards:
+         - **Left**: Fixovia brand logo (quick return to home/dashboard).
+         - **Center**: Clean, open whitespace eliminating clutter.
+         - **Right Action Bar**:
+           - **`📋 Dashboard`** (or `⚡ Workspace` / `🛡️ Admin` depending on role) button providing immediate 1-click return to the user's active portal.
+           - **`📍 Find Pros`** button when browsing other pages.
+           - **User Initials Avatar & Name Badge** (`[ AM ] Arjun`).
+           - **`Sign out`** button.
+    3. **Browser & Visual Verification**:
+       - Tested in headless Chrome on `#find?trade=Electrical`:
+         - Unauthenticated state: displays public links (`Services`, `How it works`, `Safety PIN`, `Pricing`, `Find Pros`).
+         - Authenticated state (customer logged in): central marketing list completely hidden (`hasUl: false`), displaying clean Fixovia brand and right-aligned user dashboard actions.
+       - Immediately purged all temporary inspection screenshots (`temp_nav.png`) and test scripts (`test_navbar_verify.mjs`) per strict project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 744ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\common\Navbar.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 68] Removed "Simulate Active Booking" Button from Customer Overview Page
+- **Timestamp**: 2026-11-13 17:56:00 IST
+- **Action**:
+  - Fulfilled user request to delete the demo simulator button on [`http://localhost:5173/#customer/overview`](file:///c:/Fixovia/frontend/src/pages/DashboardPage.jsx):
+    1. **Overview Hero Card Cleanup (`DashboardPage.jsx`)**:
+       - Removed the secondary `⚡ Simulate active booking` button from the `.no-booking-hero-card` action group.
+       - Kept the single clean primary CTA: **`Book a new service →`** which smoothly navigates to the booking services grid.
+    2. **Browser & Visual Verification**:
+       - Verified in headless Chrome on `#customer/overview`: confirmed the hero card only shows `Book a new service →` with centered spacing and no test simulator button.
+       - Cleaned up all temporary test scripts and screenshots immediately after verification per strict project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 790ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 69] Redirect "View all 8 services →" to Customer Book Page
+- **Timestamp**: 2026-11-13 18:00:00 IST
+- **Action**:
+  - Addressed user request on [`http://localhost:5173/#customer/overview`](file:///c:/Fixovia/frontend/src/pages/DashboardPage.jsx): *"After clicking on this button which is present in overview page it should redirect to the #customer/book page"* (attached screenshot of `View all 8 services →`):
+    1. **Subpage Navigation Update (`DashboardPage.jsx`)**:
+       - Updated the `onClick` handler of the **"View all 8 services →"** button on the Customer Overview page to invoke `handleNavTabClick('c-book')`.
+       - Smoothly transitions the active dashboard tab to **Book** (`#customer/book`) and displays all 8 verified services (Electrical, Plumbing, AC Repair, Carpentry, Painting, Cleaning, Appliances, Pest Control) with their starting prices and descriptions.
+    2. **Browser & Visual Verification**:
+       - Verified via headless Chrome: clicking "View all 8 services →" sets `window.location.hash = #customer/book`, activates the Book navigation pill, and displays the full 8-trade grid and Fixovia Service Guarantee.
+       - Deleted temporary inspection screenshots (`temp_viewall.png`) and test scripts (`test_viewall_verify.mjs`) immediately after verification per project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 722ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 70] Separate Dedicated Profile Pages for Customer, Partner, and Admin & Header Sign-Out Separation
+- **Timestamp**: 2026-11-13 18:15:00 IST
+- **Action**:
+  - Addressed user request: *"Don't make like this add a profile separate page for the customer partner and admin"* (attached screenshot of cramped user badge with inline sign-out in navbar):
+    1. **Header Architecture & Clean Separation (`dashboards.css`, `DashboardPage.jsx`)**:
+       - Replaced the crammed, static user chip with `.me-nav-group` containing:
+         - A dedicated interactive user profile button (`.me-profile-link`) with avatar initials, full name, role label, and forward arrow indicator that navigates directly to the role's profile subpage (`#customer/profile`, `#partner/profile`, or `#admin/profile`).
+         - A clean, standalone **`Sign out`** button (`.btn-signout-separate`) with generous spacing and hover states.
+    2. **Dedicated Profile Subpages & Navigation (`DashboardPage.jsx`)**:
+       - Added **"👤 Profile"** tab to horizontal navigation for all three roles:
+         - Customer: `Overview`, `Book`, `History`, `Profile` (`#customer/profile`)
+         - Partner: `Dispatch`, `Wallet`, `Ledger`, `Profile` (`#partner/profile`)
+         - Admin: `Metrics`, `KYC`, `Activity`, `Profile` (`#admin/profile`)
+       - **Customer Profile Subpage (`#customer/profile`)**:
+         - Profile header card with large avatar, name, verification pills (`Mobile & Email Verified`, `Gurugram, Haryana`, `5.0 Star Customer`), and `Save Changes` CTA.
+         - Section cards: Personal Details (name, phone, email), Primary Doorstep Address (flat, street, landmark, city & pincode), Doorstep Safety & PIN Controls (mandatory OTP toggle, SMS dispatch toggle, phone number masking), Service History & Guarantees (14 completed jobs, ₹4,250 estimated savings, 30-day warranty).
+       - **Partner Profile Subpage (`#partner/profile`)**:
+         - Header card with avatar, Pro ID (`FXV-PRO-8492`), verification badges (`Govt KYC Verified`, `Electrical`, `4.92 Rating (348 jobs)`, `Dispatch Active`).
+         - Section cards: Trade Specialization & Coverage (primary/secondary trades, experience, dispatch radius 5km–25km, assigned hub), Identity & Compliance Verification (Aadhaar `•••• •••• 9104` verified by admin, PAN tax compliant, Police clearance passed), Payout Bank & Settlement Account (SBI details, IFSC, linked UPI ID, daily 9:00 PM auto-sweep toggle), Performance Scorecard (98.4% on-time arrival, 96.8% first-fix rate, Top 5% ranking).
+       - **Admin Profile Subpage (`#admin/profile`)**:
+         - Header card with avatar, role (`FXV-ADM-001`), root badges (`Tier 1 Root Super Admin`, `Hardware 2FA Active`, `System Overrides Authorized`, `8 National Service Hubs`).
+         - Section cards: Administrator Credentials (official email, emergency escalation hotline, jurisdiction), Security & Multi-Factor Authentication (hardware 2FA toggle, session timeout select, auto-approval escrow limit), Role-Based Access & Audit Logging (KYC root permissions, emergency PIN bypass, wallet sweep dual sign-off), Active Session Telemetry (IP, session duration, TLS 1.3 audit stream).
+    3. **Browser & Visual Verification**:
+       - Verified in headless Chrome: `#customer/profile`, `#partner/profile`, and `#admin/profile` all render cleanly with complete pure white / light theme styling.
+       - Confirmed header displays the separate interactive profile button and the distinct sign out button.
+       - Cleaned up and deleted all temporary test scripts (`test_profile_views.mjs`) and screenshots (`temp_cust_profile.png`, `temp_partner_profile.png`, `temp_admin_profile.png`) immediately after verification per project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 753ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 71] Fixed Worker Card "View Profile" Redirection & Added Comprehensive Worker Profile Dossier
+- **Timestamp**: 2026-11-13 18:24:00 IST
+- **Action**:
+  - Addressed user request on [`http://localhost:5173/#find?trade=Plumbing`](file:///c:/Fixovia/frontend/src/pages/FindWorkers.jsx): *"While clicking on the view profile in this card of this page we are redirecting to the landing page fix that while on clicking that there should be the extra details of the worker would have to be seen to the customers"* (attached screenshot of Sanjay Verma card):
+    1. **Fixed Hash Router Redirection Bug (`App.jsx`)**:
+       - Root cause: `getPageFromHash()` did not recognize `profile` as a valid hash route, so on `window.location.hash = 'profile'` it fell through to default `'home'` (landing page).
+       - Added `if (raw.startsWith('profile')) return 'profile';` and configured `getWorkerFromHash()` to parse `#profile?id={workerId}`.
+       - Updated fallback worker registry in `App.jsx` to include all 12 platform pros with rich data, coordinates, and skills.
+       - Updated `navigate('profile', worker)` to set hash `#profile?id=${worker.id}` so page reloads or deep links retain the exact selected worker.
+    2. **Enhanced Comprehensive Worker Profile Page (`WorkerProfile.jsx`)**:
+       - **Top Contextual Back Button**: `← Back to {w.role} Pros` returning smoothly to `#find?trade={role}`.
+       - **Header Showcase Card**: Large avatar initials with online pulse dot, full name, `✓ Fixovia Verified Pro` badge, trade badge (e.g. `Master Plumber`), rating `★ 4.8 (98 reviews)`, distance `1.8 km away`, and instant dispatch availability pill.
+       - **Quick Credentials Row**: Government Aadhaar ID (UIDAI Verified ✓), Police Record (Clean Clearance ✓), On-Time Arrival (98.4% Punctual), Doorstep Start (4-Digit PIN Lock).
+       - **About Section (Bio)**: Trade-tailored biography detailing their experience, specialization (acoustic leak detection, motorized drain snake unclogging, geyser fitting), and approach to clean zero-mess workmanship.
+       - **Specialized Skills & Competencies**: Core specialty chips highlighting equipment tasks.
+       - **Standard Rate Card & Price Guarantee**: Transparent pricing for visit diagnosis, minor repairs, standard pipe joints, and major installations, highlighting that the visit fee is credited directly into final repair labor.
+       - **Professional Toolkit & Diagnostic Equipment**: Detailed equipment list brought on-site (acoustic leak sensors, rotary auger, digital pressure tester, PPR welder, insulated hand tools).
+       - **Verified Customer Reviews**: Authentic reviews with customer names, neighborhood areas, verified visit tags, star ratings, and detailed testimonials.
+       - **Sticky Booking Sidebar**:
+         - Price per visit (`₹450 / visit`) with adjustable credit note.
+         - Instant CTA `Book Appointment with {Name} →` opening pre-configured `BookingModal`.
+         - Inquiry button `💬 Send Message / Inquiry`.
+         - Technician stats (Rating, Distance, Arrival ETA, 146+ completed jobs, Doorstep PIN security).
+         - Fixovia ₹10,000 Safety Promise guarantee card.
+    3. **Browser & Visual Verification**:
+       - Tested via headless Chrome: clicked "View Profile" on Sanjay Verma's card on `#find?trade=Plumbing`.
+       - Confirmed smooth transition to `http://localhost:5173/#profile?id=2` displaying Sanjay Verma's full dossier without redirecting to the landing page.
+       - Cleaned up and deleted all temporary test scripts and screenshots (`temp_worker_profile.png`, `temp_sanjay_profile.png`, `test_worker_profile.mjs`) immediately after verification per project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 1.33s with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\frontend\src\pages\WorkerProfile.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 72] Same-Screen Single Profile Card Modal on Find Pros Page
+- **Timestamp**: 2026-11-13 18:32:00 IST
+- **Action**:
+  - Addressed user request on [`http://localhost:5173/#find?trade=Plumbing`](file:///c:/Fixovia/frontend/src/pages/FindWorkers.jsx): *"don't make these separate pages please make it as a single card which shows on the same screen of this page"*:
+    1. **In-Page Single Card Modal (`FindWorkers.jsx`, `map.css`)**:
+       - Replaced cross-page redirection with a state-driven Single Card Modal (`profileWorker`) rendered directly on top of the search and radar map screen with a soft-blurred backdrop.
+       - Clicking **"View Profile"** on Sanjay Verma (or any pro card) keeps the customer on the exact same screen (`#find?trade=Plumbing`), instantly presenting the comprehensive worker dossier in a clean, elevated single card modal.
+       - **Card Contents**:
+         - Top Header: Large avatar with live online status beacon, full name, `✓ Verified Pro`, `Master Plumber` badge, star rating (`★ 4.8`), distance (`1.8 km away`), and an easy `✕` close button.
+         - About {Name} Bio: Tailored description of their 6+ years experience, acoustic leak detection, and zero-tile-damage pipeline fitting.
+         - Core Skills & Specializations: `Acoustic Leak Detection`, `Drain Snake`, `Geyser Fit`.
+         - Government ID & Background Verifications: Aadhaar UIDAI, Police Clearance, Skill Assessment Grade A+, and Doorstep 4-digit OTP Guard.
+         - Standard Rate Card: Fixed Visit & Diagnosis (`₹450`, adjustable into final bill), Minor Repair (`From ₹199`), Standard Unclog (`From ₹399`).
+         - Professional Equipment Carried: Rotary auger, acoustic sensor, pressure gauge, PPR welder, basin wrench.
+         - Customer Testimonials: Real verified reviews with star ratings and neighborhood names.
+         - Sticky Card Footer: Fixed visit rate reminder with `Close` button and primary `Book Appointment with {Name} →` button (which directly opens `BookingModal` for that worker on the same screen).
+    2. **Hash & Router Alignment (`App.jsx`)**:
+       - Direct visits or links like `#profile?id=2` now automatically route directly to the Find Pros search screen (`#find?trade=Plumbing`) and open that worker's single card modal in place.
+    3. **Browser & Visual Verification**:
+       - Verified via headless Chrome: clicked "View Profile" on Sanjay Verma's card on `#find?trade=Plumbing`.
+       - Confirmed the page URL remains `http://localhost:5173/#find?trade=Plumbing`, and the Single Profile Card smoothly overlays the screen showing Sanjay Verma's full details.
+       - Confirmed clicking the `✕` close button cleanly dismisses the card and returns focus to the pro cards and radar map.
+       - Cleaned up and deleted all temporary test scripts and screenshots (`temp_same_screen_card.png`, `test_same_screen_card.mjs`) immediately after verification per project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 847ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\pages\FindWorkers.jsx`
+  - `C:\Fixovia\frontend\src\styles\map.css`
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+### [Step 73] Smooth Auto-Hide Navbar While Scrolling Down Pages
+- **Timestamp**: 2026-11-13 18:46:00 IST
+- **Action**:
+  - Addressed user request: *"make thi navbar invisible while scrolling on the pages"* (attached screenshot of top navbar staying visible over content with scrolled scrollbar):
+    1. **High-Performance Scroll Telemetry (`Navbar.jsx`, `DashboardPage.jsx`)**:
+       - Implemented `requestAnimationFrame` debounced scroll listeners in both `Navbar.jsx` (main navigation) and `DashboardPage.jsx` (`.dash-navbar`).
+       - Tracks `window.scrollY` and scroll delta:
+         - **At page top (`scrollY <= 20px`)**: Navbar remains fully visible.
+         - **Scrolling down (`scrollY > lastScrollY && scrollY > 40px`)**: Navbar smoothly transitions out of view (`transform: translateY(-100%)`, `opacity: 0`, `visibility: hidden`, `pointer-events: none`).
+         - **Scrolling up (`scrollY < lastScrollY - 12px`)**: Navbar gently glides back into view (`transform: translateY(0)`, `opacity: 1`, `visibility: visible`) so users can access navigation whenever needed.
+    2. **CSS Animation & Hardware Acceleration (`globals.css`, `dashboards.css`)**:
+       - Configured cubic-bezier easing `transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease` and `will-change: transform, opacity`.
+       - Added `.nav-hidden` class definitions ensuring zero layout jank or element overlap while invisible.
+    3. **Browser & Visual Verification**:
+       - Tested via headless Chrome:
+         - Initial state at `scrollY: 0`: Navbar visible (`isHidden: false`).
+         - Scrolled down by 300px: Navbar cleanly becomes invisible (`isHidden: true`, `top: -73px`, `opacity: 0`).
+         - Scrolled back up to top: Navbar reappears smoothly (`isHidden: false`, `top: 0px`).
+       - Cleaned up and deleted all temporary test scripts and screenshots (`temp_scrolled_nav.png`, `test_scroll_navbar.mjs`) immediately after verification per project rule.
+  - Verified compilation via `npm run build` (51 modules transformed in 828ms with 0 errors). Dev server running live on `http://localhost:5173/`.
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\common\Navbar.jsx`
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\styles\globals.css`
+  - `C:\Fixovia\frontend\src\styles\dashboards.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+- **Step 74 (Fixovia Logo Redirection Guard When Logged In)**:
+  - **Objective**: Prevent redirection when clicking the Fixovia brand logo (`/logo.png`) on any page if the user is authenticated, while preserving normal `#home` redirection for logged-out/guest visitors.
+  - **Implementation**:
+    1. **`Navbar.jsx`**:
+       - Added authentication check in `<a className="logo" ...>`:
+         ```jsx
+         href={user ? undefined : "#top"}
+         onClick={(e) => {
+           e.preventDefault();
+           if (user) return; // Prevent redirect when authenticated
+           onNavigate('home');
+           window.scrollTo({ top: 0, behavior: 'smooth' });
+         }}
+         style={user ? { cursor: 'default' } : {}}
+         ```
+    2. **`DashboardPage.jsx`**:
+       - Updated `.nav-brand a` to prevent navigating away from the dashboard when clicking the logo:
+         ```jsx
+         href="#dashboard"
+         onClick={(e) => {
+           e.preventDefault();
+           // Preserves current dashboard tab and view
+         }}
+         style={{ cursor: 'default' }}
+         ```
+    3. **`App.jsx`**:
+       - Guarded mobile bottom brand bar button:
+         ```jsx
+         onClick={() => {
+           if (user) return;
+           navigate('home');
+           window.scrollTo({ top: 0, behavior: 'smooth' });
+         }}
+         style={user ? { cursor: 'default' } : {}}
+         ```
+    4. **Automated End-to-End CDP Verification**:
+       - Tested via headless Chrome:
+         - **Logged In on `#customer/overview`**: Clicked logo -> remained on `#customer/overview` (did not redirect).
+         - **Logged In on `#find?trade=Plumbing`**: Clicked navbar logo -> remained on `#find?trade=Plumbing` (did not redirect).
+         - **Logged Out on `#find?trade=Plumbing`**: Clicked navbar logo -> redirected to `#home` as expected for guest visitors.
+       - Cleaned up and deleted all temporary test scripts immediately after testing.
+  - Verified compilation via `npm run build` (51 modules transformed in 797ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\common\Navbar.jsx`
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\frontend\src\App.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+- **Step 75 (Fix Booking Modal Overlapping & Viewport Clipping on Find Pros)**:
+  - **Objective**: Fix booking modal cut-off at the top and page elements/footer overlapping when clicking "Book Now →" on `#find?trade=Plumbing`.
+  - **Root Cause Analysis**:
+    1. `BookingModal` was rendered inline inside `<main className="page-enter">` within `<div className="page-transition-wrap">`.
+    2. `.page-transition-wrap` had `will-change: opacity, transform;` and an animation ending in `transform: translateY(0)`. According to the W3C CSS Transforms specification, any transform establishes a containing block for all `position: fixed` descendants. This trapped the fixed overlay inside the scroll container instead of pinning it to the viewport, causing the top of the modal to be pushed off-screen when scrolled, and leaving the footer uncovered at the bottom.
+    3. The internal modal layout lacked fixed top/bottom containment, allowing content to push modal boundaries.
+  - **Implementation**:
+    1. **React Portal Implementation**:
+       - Portaled `BookingModal` (`createPortal(modalContent, document.body)`) and `profileWorker` modal in `FindWorkers.jsx` directly to `document.body`, guaranteeing 100vw × 100vh viewport coverage immune to parent scroll positions, stacking contexts, or CSS transforms.
+    2. **Modal Fixed Shell & Scrollable Body Architecture**:
+       - Re-architected `BookingModal.jsx`:
+         - Fixed top header & progress dots (`flexShrink: 0`, `borderBottom: 1px solid var(--border)`).
+         - Scrollable middle step body (`flex: 1`, `overflowY: 'auto'`).
+         - Fixed bottom action bar (`flexShrink: 0`, `borderTop: 1px solid var(--border)`).
+         - Clean desktop card styling: `borderRadius: '24px'`, `maxHeight: 'min(90vh, 760px)'`, `boxShadow: '0 25px 60px -15px rgba(0,0,0,0.35)'`.
+    3. **CSS Enhancements**:
+       - Updated `.overlay` in `globals.css` with `z-index: 10000`, `overflow-y: auto`, and `overscroll-behavior: contain`.
+       - Released `.page-transition-wrap` containing block by removing `will-change: transform` and finishing at `transform: none`.
+    4. **CDP & Visual Verification**:
+       - Simulated logged-in booking flow on `#find?trade=Plumbing`: scrolled to Sanjay Verma (`scrollY: 832px`) and clicked "Book Now →".
+       - Verified full viewport overlay coverage (`top: 0`, `bottom: 724`), modal perfectly centered (`top: 45px`, `bottom: 679px`), header, steps, form fields, and footer button 100% visible with zero overlaps.
+       - Captured and inspected screenshot, then immediately deleted screenshot and test script per user guidelines.
+  - Verified compilation via `npm run build` (52 modules transformed in 825ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\booking\BookingModal.jsx`
+  - `C:\Fixovia\frontend\src\pages\FindWorkers.jsx`
+  - `C:\Fixovia\frontend\src\styles\globals.css`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+- **Step 76 (Trade-Specific Dynamic Fixing Options in Booking Modal)**:
+  - **Objective**: Dynamically configure the booking modal's service step (`StepService`) according to the selected trade and pro, replacing generic static options with trade-specific fixing services, tailored placeholders, and worker skill highlights.
+  - **Implementation**:
+    1. **`TRADE_SERVICES` Catalog & Resolver (`BookingModal.jsx`)**:
+       - Defined complete fixing service dictionaries across all 8 Fixovia categories:
+         - **Plumbing (`Plumber`)**: Pipe Leak Repair, Tap & Faucet Installation, Drain & Sink Unclogging, Geyser (Water Heater) Installation, Toilet / Flush Tank Repair, Water Motor / Pump Fixing, Diverter / Shower Repair, Overhead Tank Float Valve.
+         - **Electrical (`Electrician`)**: Fan Repair / Installation, Concealed Wiring & Rewiring, MCB Trip & Switchboard Repair, Short Circuit Troubleshooting, Light & Chandelier Fitting, Inverter Battery Connection, 16A Heavy Appliance Socket, Earthing & Voltage Spike Fix.
+         - **AC Repair (`AC Technician`)**: Power Jet Deep Cleaning, Refrigerant Gas Refill (R32/R410A), Cooling Issue Diagnostics, Water Leakage From Indoor Unit, AC Installation / Uninstallation, Compressor / Capacitor Repair, PCB Diagnostics, Copper Pipe Flare.
+         - **Carpentry (`Carpenter`)**: Door Lock & Smart Lock Fitting, Hydraulic Bed & Hinge Repair, Modular Kitchen Cabinet Tuning, Furniture Assembly, Wardrobe Sliding Channel Fix, Door Planing / Realignment, Wooden Shelf & Latch Mounting, Wood Polishing.
+         - **Painting (`Painter`)**: Interior Wall Painting, Waterproofing & Damp Treatment, Accent Wall & Texture Design, Wall Putty & Crack Filling, Door & Window Wood Enamel, Exterior Weatherproof Coat.
+         - **Cleaning (`Cleaner`)**: Bathroom Deep Descaling, Kitchen Chimney & Degreasing, Sofa & Carpet Shampooing, Full Home Deep Cleaning, Floor Machine Scrubbing, Balcony Wash, Mattress Sanitization.
+         - **Appliances (`Appliance Pro`)**: Washing Machine Drum/Drain Fix, Refrigerator Cooling/Defrost Fix, Microwave Magnetron Repair, RO Purifier Filter Change, Geyser Element Replacement, Chimney Motor Fix.
+         - **Pest Control (`Pest Control`)**: Odorless Cockroach Gel Treatment, Anti-Termite Drilling & Chemical Shield, Bed Bug Heat Eradication, Mosquito Fogging, Rodent Baiting & Traps, Ant & Insect Barrier.
+       - Implemented `getTradeConfig(roleOrTrade)` resolving role/trade variants to the appropriate config.
+    2. **Worker Skill Integration**:
+       - Updated `StepService` to receive `worker={worker}` and intelligently merge the worker's own verified skills (e.g. `Acoustic Leak Detection`, `Drain Snake`, `Geyser Fit` for Sanjay Verma) with trade-specific options.
+       - Dynamic title: `"What needs fixing in Plumbing?"`
+       - Dynamic subtitle: `"Choose a plumbing service for Sanjay or type your own."`
+       - Dynamic input & textarea placeholders tailored specifically to the trade.
+    3. **CDP Automated Verification**:
+       - Tested via headless Chrome on `#find?trade=Plumbing`: opened booking modal for Sanjay Verma.
+       - Confirmed title `"What needs fixing in Plumbing?"` and chips exclusively matching plumbing services.
+       - Captured screenshot, verified visual rendering, and immediately deleted screenshot and test script per user guidelines.
+  - Verified compilation via `npm run build` (52 modules transformed in 775ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\booking\BookingModal.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+- **Step 77 (Active Booking State Persistence & Live Dashboard Tracking)**:
+  - **Objective**: Fix newly created bookings not showing on the customer's Active Booking overview page (`#dashboard` / `#customer`).
+  - **Root Cause Analysis**:
+    1. `BookingModal.jsx` previously called the backend `api.createJob` endpoint, but never persisted `fixovia_has_active_booking` or `fixovia_active_booking` to browser `localStorage`.
+    2. `DashboardPage.jsx` had a static fallback `activeBooking` object (`Electrician`, `Switchboard repair`, `Raj Singh`) and did not listen for booking creation events or dynamically load the assigned technician's information (avatar, name, rating, reviews, color).
+  - **Implementation**:
+    1. **`BookingModal.jsx` Persistence**:
+       - In `handleConfirm`, constructed the complete active booking model (pro details, service title, time slot, delivery address, price breakdown, doorstep PIN `4827`, and stage `1`).
+       - Saved `localStorage.setItem('fixovia_has_active_booking', 'true')` and `localStorage.setItem('fixovia_active_booking', JSON.stringify(activeBookingData))`.
+       - Dispatched `window.dispatchEvent(new Event('fixovia_booking_created'))`.
+    2. **`DashboardPage.jsx` Dynamic State Synchronization**:
+       - Initialized `activeBooking` and `custStage` directly from `localStorage.getItem('fixovia_active_booking')`.
+       - Added reactive `storage` and `fixovia_booking_created` event listeners to automatically update state without requiring manual reloads.
+       - Replaced hardcoded "Raj Singh" / "RS" with dynamic technician data (`assignedPro.name`, `assignedPro.rating`, `assignedPro.reviews`, `assignedPro.initials`, `assignedPro.color`).
+       - Updated Doorstep PIN card, rating review prompt, and stage toasts to dynamically reflect the actual technician booked.
+    3. **Automated End-to-End CDP Verification**:
+       - Executed a complete customer booking flow in headless Chrome:
+         - Selected Sanjay Verma (`Plumber`) on `#find?trade=Plumbing`.
+         - Chose `Pipe Leak Repair`, selected morning slot, input Punjab address, and confirmed payment.
+         - Redirected to `#dashboard` and verified that the active booking immediately displayed:
+           - Title: `"Active Booking · Namaste, Arjun 👋"`
+           - Header: `"Plumber · Pipe Leak Repair"`
+           - Pro: `"Sanjay Verma · 4.8 ★"` with `SV` avatar in `#7c3aed`
+           - Status: `"Accepted"` with active stepper and PIN `"4 8 2 7"`
+           - Price: `"Total ₹560"`
+       - Captured screenshot, verified visual rendering, and immediately deleted screenshot and test script per user guidelines.
+  - Verified compilation via `npm run build` (52 modules transformed in 856ms with 0 errors).
+- **Files Modified**:
+  - `C:\Fixovia\frontend\src\components\booking\BookingModal.jsx`
+  - `C:\Fixovia\frontend\src\pages\DashboardPage.jsx`
+  - `C:\Fixovia\PROJECT_RECORD.md`
+
+- **Step 78 (Removed Redundant "Overview ·" from Customer Greeting)**:
+  - User requested removing the "Overview" text prefix from the greeting on the Customer Overview page (`http://localhost:5173/#customer/overview`).
+  - In `c:\Fixovia\frontend\src\pages\DashboardPage.jsx`, updated the `<h1>` greeting from `{hasActiveBooking ? 'Active Booking' : 'Overview'} · Namaste, {meBadge.name.split(' ')[0]} 👋` to cleanly render `Namaste, {meBadge.name.split(' ')[0]} 👋`, aligning directly with the original design in `Fixovia – Dashboards.html` without redundant sub-page title prefixes.
+  - Verified clean compilation with `npm run build` (52 modules transformed, 0 errors).
+
+- **Step 79 (Added Fixed Visiting & Inspection Rate Input in Partner Profile and Partner Registration)**:
+  - User requested adding the Fixed Visiting Price field to both the **Partner Profile page** and the **Partner Registration form**.
+  - In `c:\Fixovia\frontend\src\context\AuthContext.jsx`:
+    - Added `visitRate` property support across demo accounts (`DEMO_ACCOUNTS.worker.visitRate = 499`), initial database seeds, `login` handler, and `register` handler.
+  - In `c:\Fixovia\frontend\src\pages\AuthPage.jsx`:
+    - Added `TRADE_DEFAULT_RATES` mapping default rates for each trade (Electrician: ₹499, Plumber: ₹450, AC: ₹399, Carpenter: ₹599, Painter: ₹799, Cleaner: ₹399).
+    - Added `Fixed Visiting & Inspection Charge (₹)` input field with `₹` currency icon, minimum ₹99 validation, error state indicators, and auto-suggestion when a trade is selected.
+    - Updated `handleVerifyOtp` and `register` to persist `visitRate`.
+  - In `c:\Fixovia\frontend\src\pages\DashboardPage.jsx`:
+    - Added `Fixed Visiting & Inspection Price` input field under **Card 1: Professional & Trade Info** in the Partner Profile view (`#partner/profile`).
+    - Added `💰 ₹{partnerProfile.visitRate} Fixed Visit` status pill badge in the profile header.
+    - Linked `Save Changes` buttons to `updateUser({ trade, visitRate })` to instantly update and persist the partner's custom rate in the session and local DB.
+  - In `c:\Fixovia\frontend\src\App.jsx`:
+    - Updated hash route detection so query strings like `#register?role=partner` and `#login?role=partner` route correctly to `AuthPage`.
+  - Verified with headless Chrome automation test checking existence, visibility, trade-auto-fill, and badge updates. Cleaned up temporary test artifacts immediately.
+  - Verified compilation via `npm run build` (52 modules transformed in 1.54s with 0 errors).
+
+- **Step 80 (Real-Time Bidirectional Partner Visiting Rate Synchronization to Customer Booking Screens)**:
+  - User requested: *"When i am changing price in this card why it is not reflecting on the customers booking page"*, providing screenshot of Partner Profile setting Fixed Visiting & Inspection Price to ₹200.
+  - Root Cause:
+    1. The input in `DashboardPage.jsx` was previously only updating local state without persisting to `localStorage` or broadcasting updates on change/blur.
+    2. `FindWorkers.jsx`, `BookingModal.jsx`, and `#customer/book` were relying on static hardcoded worker rates (`BASE_WORKERS` with ₹499/₹450).
+  - Implementation:
+    1. Created `frontend/src/utils/partnerRates.js` providing `getStoredPartnerRate`, `getStoredPartnerInfo`, and `mergeWorkersWithPartnerRate` to map partner trade and visiting prices dynamically.
+    2. In `DashboardPage.jsx`:
+       - Added `handlePartnerRateChange` and `handlePartnerTradeChange` updating state, writing to `localStorage` under `fixovia_partner_visiting_rate`, and broadcasting custom `fixovia_partner_rate_updated` event.
+       - Connected `onBlur` and `handleSavePartnerProfile` to ensure changes persist even without explicitly clicking Save.
+       - Made the quick book tiles on `#customer/book` dynamic (e.g. Electrical now renders `From ₹${livePartnerRate}`).
+    3. In `FindWorkers.jsx`:
+       - Initialized `workers` with `mergeWorkersWithPartnerRate(BASE_WORKERS)`.
+       - Added real-time event listeners on `fixovia_partner_rate_updated` and `storage` so technician cards update instantaneously.
+       - Derived `activeProfileWorker` and `activeBookingWorker` so both the profile popup and `BookingModal` receive the partner's updated custom rate (₹200).
+    4. In `BookingModal.jsx`:
+       - Configured `baseLabor` to calculate dynamically from `worker.rate || getStoredPartnerRate(499)`.
+       - Step 1 header, Step 4 confirmation bill summary, and created active booking payload now directly reflect the updated rate.
+  - Verified with comprehensive end-to-end headless Chrome automated tests simulating changing price to ₹200, verifying `#customer/book`, `#find?trade=Electrical` (technician card displays ₹200 Fixed Visit), and `BookingModal` (displays ₹200/visit and ₹200 base labor).
+  - Verified compilation via `npm run build` (53 modules transformed in 716ms with 0 errors).
+
+---
+
 ## 📊 Current System Status Matrix
 
 | Component | Port / Path | State | Verification Method |
 | :--- | :--- | :--- | :--- |
 | **Frontend Web App** | `http://localhost:5173` | 🟢 ONLINE | HTTP 200 OK via Vite Dev Server |
+| **Unified Multi-Role Dashboard** | `http://localhost:5173/#dashboard` | 🟢 VERIFIED | Customer, Partner, and Admin roles with 100% template fidelity |
+| **Customer Dashboard** | `http://localhost:5173/#customer` | 🟢 ONLINE | 6-step stepper, radar matching, 3D flip PIN card, bill breakdown |
+| **Partner Workspace** | `http://localhost:5173/#partner` | 🟢 ONLINE | Online toggle, 60s job timer, PIN check, parts billing, wallet ledger |
+| **Admin Control Center** | `http://localhost:5173/#admin` | 🟢 ONLINE | 4 KPI counters, weekly bar chart, city bars, KYC queue, live feed |
+| **Dedicated Auth Page** | `http://localhost:5173/#login` | 🟢 VERIFIED | Two-column split layout matching `Fixovia – Sign in.html` |
 | **Customer ↔ Partner Switch** | `http://localhost:5173/#login` | 🟢 FLUID SPRING ANIMATION | Gliding pill with `cubic-bezier(0.34, 1.45, 0.64, 1)`, icon wobble & form slide |
 | **Mobile Phone Layout** | Viewports <= 560px / 768px | 🟢 COMPACT MARGINS | 8px-12px side gutters; 22px section spacing; compact card paddings |
 | **Toast Notifications** | Global Alert Layer | 🟢 SNAPPY (1.2s–1.4s) | Duration reduced from 4.0s to 1.2s–1.4s with smooth fade/slide-out |
@@ -982,13 +1902,10 @@ This document maintains an official, step-by-step chronological record of all ar
 | **Hero Service Selector** | `http://localhost:5173` | 🟢 MODERN DROPDOWN | Upgraded to custom animated dropdown |
 | **Password Visibility Toggle** | `http://localhost:5173/#login` | 🟢 MODERN SVG | Replaced emoji eye with vector SVG Eye & EyeOff icons |
 | **Global Transitions** | Site-wide | 🟢 ONLINE | Smooth page fades, hover lifts, active tap transforms & modal overlays |
-| **Dedicated Auth Page** | `http://localhost:5173/#login` | 🟢 ONLINE | Customer photo shifted upward; smooth synchronized 0.7s sliding position swap |
 | **Find Pros Page** | `http://localhost:5173/#find` | 🟢 ONLINE | Clean interface without odd "Guest Mode" banners; standard "Book Now →" with safe login guard |
 | **Service Areas** | Throughout App & Footer | 🟢 PUNJAB ONLY | Ludhiana, Amritsar, Jalandhar, Patiala, Mohali, Bathinda, Pathankot, Hoshiarpur, Zirakpur, Khanna, Phagwara |
 | **Services Page** | `http://localhost:5173/#services` | 🟢 ONLINE | All Book buttons guarded; redirects unauthenticated visitors to login page |
 | **Service Booking Modal** | `http://localhost:5173/#services` / `Find Pros` | 🟢 ONLINE | Google Pay single-tick payment confirmation with expanding ripples, tick draw & Safety PIN |
-| **Customer Dashboard** | `http://localhost:5173/#dashboard` | 🟢 ONLINE | Instant routing upon verification with real persistent session state |
-| **Partner Workspace** | `http://localhost:5173/#dashboard` | 🟢 ONLINE | Instant routing upon verification with pro toolkit & stats |
 | **How It Works Page** | `http://localhost:5173/#how-it-works` | 🟢 ONLINE | 4-step journey & live interactive Punjab pro matching simulator |
 | **Safety PIN Page** | `http://localhost:5173/#safety-pin` | 🟢 ONLINE | Interactive PIN keypad simulator & Punjab central register logging |
 | **Pricing Page** | `http://localhost:5173/#pricing` | 🟢 ONLINE | Interactive live bill calculator & rate cards |
@@ -998,8 +1915,9 @@ This document maintains an official, step-by-step chronological record of all ar
 ---
 
 ## 📝 Demo Credentials for System Testing
-- **Customer Portal**: `customer@fixovia.in` / `demo123` (*Arjun Mehta*)
-- **Partner Workspace**: `worker@fixovia.in` / `demo123` (*Raj Kumar*)
+- **Customer Portal**: `customer@fixovia.in` / `demo123` (*Aarav Sharma*)
+- **Partner Workspace**: `worker@fixovia.in` / `demo123` (*Raj Singh*)
+- **Admin Control Center**: `admin@fixovia.in` / `demo123` (*Ops Admin*)
 - *(Any new email & password entered is also immediately added to the persistent database and verified).*
 
 *(This record is continuously updated with every subsequent step).*

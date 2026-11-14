@@ -1,734 +1,1433 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth, DEMO_ACCOUNTS } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import ThemeToggle from '../components/common/ThemeToggle';
+import '../styles/signin.css';
+
+export const TRADE_OPTIONS = [
+  { value: 'Electrician', label: 'Electrician', icon: '⚡', desc: 'Wiring, MCBs, fans, switches' },
+  { value: 'Plumber', label: 'Plumber', icon: '🔧', desc: 'Leaks, taps, pipes, geysers' },
+  { value: 'AC technician', label: 'AC technician', icon: '❄️', desc: 'Deep cleaning, gas refill, PCB' },
+  { value: 'Carpenter', label: 'Carpenter', icon: '🔨', desc: 'Furniture, locks, fittings' },
+  { value: 'Painter', label: 'Painter', icon: '🎨', desc: 'Waterproofing, walls & woodwork' },
+  { value: 'Cleaner', label: 'Deep Cleaner', icon: '🧹', desc: 'Kitchen & bathroom deep cleaning' },
+];
+
+export const TRADE_DEFAULT_RATES = {
+  'Electrician': 499,
+  'Plumber': 450,
+  'AC technician': 399,
+  'Carpenter': 599,
+  'Painter': 799,
+  'Cleaner': 399,
+};
 
 export default function AuthPage({ onNavigate }) {
-  const { login, register, loading, error } = useAuth();
+  const { login, register, updateUser } = useAuth();
   const toast = useToast();
 
-  const [tab, setTab]             = useState('customer'); // 'customer' | 'partner'
-  const [mode, setMode]           = useState('signin');   // 'signin' | 'register'
-  const [email, setEmail]         = useState('customer@fixovia.in');
-  const [password, setPassword]   = useState('demo123');
+  const [role, setRole]           = useState(() => {
+    const hash = (window.location.hash || '').toLowerCase();
+    const search = (window.location.search || '').toLowerCase();
+    if (hash.includes('partner') || hash.includes('worker') || search.includes('partner') || search.includes('worker')) {
+      return 'partner';
+    }
+    return 'customer';
+  });
+  const [up, setUp]               = useState(() => (window.location.hash || '').toLowerCase().includes('register') || (window.location.hash || '').toLowerCase().includes('signup'));      // false = signin, true = register
   const [name, setName]           = useState('');
-  const [showPassword, setShowPw] = useState(false);
+  const [regEmail, setRegEmail]   = useState('');
+  const [phone, setPhone]         = useState('');
+  const [trade, setTrade]         = useState('');
+  const [visitRate, setVisitRate] = useState(() => {
+    const hash = (window.location.hash || '').toLowerCase();
+    const search = (window.location.search || '').toLowerCase();
+    if (hash.includes('partner') || hash.includes('worker') || search.includes('partner') || search.includes('worker')) {
+      return 499;
+    }
+    return '';
+  });
+  const [isTradeOpen, setIsTradeOpen] = useState(false);
+  const tradeRef                  = useRef(null);
+  const [identifier, setIdentifier] = useState('customer@fixovia.in');
+  const [rem, setRem]             = useState(true);
+
+  // OTP Verification States
+  const [otpStep, setOtpStep]     = useState(false); // false = info entry, true = 4-digit OTP view
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '']);
+  const [otpTimer, setOtpTimer]   = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const [otpError, setOtpError]   = useState('');
+  const otpInputRefs              = [useRef(null), useRef(null), useRef(null), useRef(null)];
+
+  // Partner KYC Profile Completion States (Aadhaar & PAN upload)
+  const [showPartnerKyc, setShowPartnerKyc] = useState(false);
+  const [kycAadharFile, setKycAadharFile]   = useState('');
+  const [kycAadharNo, setKycAadharNo]       = useState('');
+  const [kycPanFile, setKycPanFile]         = useState('');
+  const [kycPanNo, setKycPanNo]             = useState('');
+  const [kycSubmitted, setKycSubmitted]     = useState(false);
+  const [kycErrors, setKycErrors]           = useState({});
+  const aadharFileRef                       = useRef(null);
+  const panFileRef                          = useRef(null);
+
+  const [errors, setErrors]       = useState({});
+  const [shake, setShake]         = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [theme, setTheme]         = useState(() => document.documentElement.getAttribute('data-theme') || 'light');
+  const [okTitle, setOkTitle]     = useState('You’re in!');
+  const [okMsg, setOkMsg]         = useState('');
 
-  // Sync theme
+  // Forgot password card state (kept for backup account recovery)
+  const [forgot, setForgot]                     = useState(() => (window.location.hash || '').toLowerCase().includes('forgot'));
+  const [forgotInput, setForgotInput]           = useState('');
+  const [forgotError, setForgotError]           = useState('');
+  const [forgotSuccess, setForgotSuccess]       = useState(false);
+  const [forgotSubmitting, setForgotSubmitting] = useState(false);
+
+  // Enhanced animations for role switching & sign-in interactions
+  const [roleAnimDir, setRoleAnimDir]   = useState(null); // 'to-partner' | 'to-customer'
+  const [fieldPulse, setFieldPulse]     = useState(false);
+  const [btnRipples, setBtnRipples]     = useState([]);
+
+  const redirectTimerRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // Sync demo credentials when tab changes
-  const handleTabChange = (selectedTab) => {
-    setTab(selectedTab);
-    const demoKey = selectedTab === 'partner' ? 'worker' : selectedTab;
-    const demo = DEMO_ACCOUNTS[demoKey];
-    if (demo && mode === 'signin') {
-      setEmail(demo.email);
-      setPassword(demo.password);
+  // OTP Resend Countdown Timer
+  useEffect(() => {
+    if (otpStep && otpTimer > 0) {
+      timerIntervalRef.current = setInterval(() => {
+        setOtpTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerIntervalRef.current);
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (otpTimer === 0) {
+      setCanResend(true);
     }
-  };
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, [otpStep, otpTimer]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const assignedRole = tab === 'partner' ? 'worker' : 'customer';
-      if (mode === 'signin') {
-        await login(email, password, assignedRole);
-      } else {
-        await register({ name, email, password, role: assignedRole });
+  useEffect(() => {
+    const handleHash = () => {
+      const raw = (window.location.hash || '').replace('#', '').toLowerCase();
+      if (raw.includes('forgot')) {
+        setForgot(true);
+        setForgotSuccess(false);
+      } else if (raw.includes('register') || raw.includes('signup')) {
+        setUp(true);
+        setForgot(false);
+        setOtpStep(false);
+      } else if (raw === 'login' || raw === 'signin' || raw === 'auth') {
+        setUp(false);
+        setForgot(false);
+        setOtpStep(false);
       }
-      setIsSuccess(true);
-      toast.success(
-        mode === 'signin'
-          ? `Welcome back! Entering your ${tab === 'partner' ? 'Partner Workspace' : 'Customer Dashboard'} 👋`
-          : 'Account created! Welcome to Fixovia 🎉',
-      );
-      setTimeout(() => {
-        onNavigate('dashboard');
-      }, 420);
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong. Please try again.');
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  // Close custom trade dropdown on outside click or Escape
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (tradeRef.current && !tradeRef.current.contains(e.target)) {
+        setIsTradeOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsTradeOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const clearErr = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const copy = { ...prev };
+      delete copy[field];
+      return copy;
+    });
+  };
+
+  const clearAllErrors = () => {
+    setErrors({});
+    setOtpError('');
+  };
+
+  const handleRoleChange = (selectedRole) => {
+    if (selectedRole === role) return;
+    const dir = selectedRole === 'partner' ? 'to-partner' : 'to-customer';
+    setRoleAnimDir(dir);
+    setRole(selectedRole);
+    clearAllErrors();
+    setOtpStep(false);
+    setShowPartnerKyc(false);
+    setKycSubmitted(false);
+    setFieldPulse(true);
+    setTimeout(() => setFieldPulse(false), 550);
+    setTimeout(() => setRoleAnimDir(null), 380);
+
+    if (!up) {
+      if (selectedRole === 'partner') {
+        setIdentifier(DEMO_ACCOUNTS.worker.email);
+      } else {
+        setIdentifier(DEMO_ACCOUNTS.customer.email);
+      }
+    } else if (selectedRole === 'partner' && !visitRate) {
+      setVisitRate(trade ? (TRADE_DEFAULT_RATES[trade] || 450) : 499);
     }
   };
 
-  const quickLogin = async (targetRole) => {
-    const demo = DEMO_ACCOUNTS[targetRole];
-    if (!demo) return;
-    setTab(targetRole === 'worker' ? 'partner' : targetRole);
-    setEmail(demo.email);
-    setPassword(demo.password);
+  const handleDemoClick = (demoKey) => {
+    clearAllErrors();
+    setUp(false);
+    setFieldPulse(true);
+    setTimeout(() => setFieldPulse(false), 550);
+
+    let demoEmail = DEMO_ACCOUNTS.customer.email;
+    let selectedRole = 'customer';
+
+    if (demoKey === 'partner') {
+      selectedRole = 'partner';
+      demoEmail = DEMO_ACCOUNTS.worker.email;
+      if (role !== 'partner') {
+        setRoleAnimDir('to-partner');
+        setTimeout(() => setRoleAnimDir(null), 380);
+      }
+    } else if (demoKey === 'admin') {
+      selectedRole = 'customer';
+      demoEmail = DEMO_ACCOUNTS.admin.email;
+      if (role !== 'customer') {
+        setRoleAnimDir('to-customer');
+        setTimeout(() => setRoleAnimDir(null), 380);
+      }
+    } else {
+      selectedRole = 'customer';
+      demoEmail = DEMO_ACCOUNTS.customer.email;
+      if (role !== 'customer') {
+        setRoleAnimDir('to-customer');
+        setTimeout(() => setRoleAnimDir(null), 380);
+      }
+    }
+
+    setRole(selectedRole);
+    setIdentifier(demoEmail);
+    // Move straight to OTP screen with 4827 filled in for instantaneous testing!
+    setOtpDigits(['4', '8', '2', '7']);
+    setOtpTimer(30);
+    setCanResend(false);
+    setOtpStep(true);
+    toast.info(`Loaded demo account (${demoKey}). Demo OTP 4827 ready!`);
+  };
+
+  const handleOpenForgot = (e) => {
+    if (e) e.preventDefault();
+    setForgot(true);
+    setForgotSuccess(false);
+    setForgotError('');
+    if (identifier && identifier.includes('@')) {
+      setForgotInput(identifier);
+    }
     try {
-      await login(demo.email, demo.password, targetRole);
-      setIsSuccess(true);
-      toast.success(`Logged in as ${demo.name} (${targetRole === 'worker' ? 'Partner' : 'Customer'})`);
-      setTimeout(() => {
-        onNavigate('dashboard');
-      }, 420);
-    } catch (err) {
-      toast.error(err.message || 'Login failed');
+      window.location.hash = 'forgot';
+    } catch {}
+  };
+
+  const handleCloseForgot = () => {
+    setForgot(false);
+    setForgotSuccess(false);
+    setForgotError('');
+    try {
+      window.location.hash = up ? 'register' : 'login';
+    } catch {}
+  };
+
+  const handleForgotSubmit = (e) => {
+    e.preventDefault();
+    const val = forgotInput.trim();
+    if (!val) {
+      setForgotError('Please enter your email or mobile number.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanPhone = val.replace(/\s|-/g, '').replace(/^\+?91/, '');
+    const isPhone = /^\d{10}$/.test(cleanPhone);
+
+    if (!emailRegex.test(val) && !isPhone) {
+      setForgotError('Please enter a valid email address or 10-digit mobile number.');
+      return;
+    }
+
+    setForgotSubmitting(true);
+    setForgotError('');
+
+    setTimeout(() => {
+      setForgotSubmitting(false);
+      setForgotSuccess(true);
+      toast.success(`Reset link and verification code sent to ${val}`);
+    }, 700);
+  };
+
+  const handleButtonClick = (e) => {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now() + Math.random();
+    setBtnRipples((prev) => [...prev, { id, x, y }]);
+    setTimeout(() => {
+      setBtnRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 600);
+  };
+
+  // Step 1: Send OTP handler
+  const handleRequestOtp = (e) => {
+    e.preventDefault();
+    clearAllErrors();
+
+    const newErrors = {};
+    if (up) {
+      if (name.trim().length < 2) newErrors.name = true;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(regEmail.trim())) newErrors.email = true;
+      const cleanPhone = phone.replace(/\s|-/g, '').replace(/^\+?91/, '');
+      if (!/^\d{10}$/.test(cleanPhone)) newErrors.phone = true;
+      if (role === 'partner') {
+        if (!trade) newErrors.trade = true;
+        if (!visitRate || isNaN(Number(visitRate)) || Number(visitRate) < 99) newErrors.visitRate = true;
+      }
+    } else {
+      const val = identifier.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const cleanPhone = val.replace(/\s|-/g, '').replace(/^\+?91/, '');
+      const isPhone = /^\d{10}$/.test(cleanPhone);
+      if (!emailRegex.test(val) && !isPhone) {
+        newErrors.identifier = true;
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShake(true);
+      setTimeout(() => setShake(false), 450);
+      return;
+    }
+
+    // Advance to OTP Step 2
+    const targetDest = up ? (phone ? `+91 ${phone}` : regEmail) : identifier;
+    setOtpStep(true);
+    setOtpDigits(['', '', '', '']);
+    setOtpTimer(30);
+    setCanResend(false);
+    toast.success(`Verification code sent to ${targetDest} (Demo OTP: 4827)`);
+
+    setTimeout(() => {
+      if (otpInputRefs[0].current) {
+        otpInputRefs[0].current.focus();
+      }
+    }, 150);
+  };
+
+  // Step 2: OTP Box input handlers
+  const handleOtpDigitChange = (index, value) => {
+    const cleaned = value.replace(/\D/g, '');
+    const char = cleaned.slice(-1); // grab the latest digit entered
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = char;
+    setOtpDigits(newDigits);
+    setOtpError('');
+
+    // Auto-advance to next input if digit entered
+    if (char && index < 3) {
+      otpInputRefs[index + 1].current?.focus();
     }
   };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        // Current is empty, back up to previous and clear it
+        otpInputRefs[index - 1].current?.focus();
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+      } else {
+        const newDigits = [...otpDigits];
+        newDigits[index] = '';
+        setOtpDigits(newDigits);
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      otpInputRefs[index - 1].current?.focus();
+    } else if (e.key === 'ArrowRight' && index < 3) {
+      otpInputRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+    if (!pasted) return;
+
+    const chars = pasted.split('');
+    const newDigits = ['', '', '', ''];
+    chars.forEach((c, i) => {
+      if (i < 4) newDigits[i] = c;
+    });
+    setOtpDigits(newDigits);
+    setOtpError('');
+
+    const focusIdx = Math.min(chars.length, 3);
+    otpInputRefs[focusIdx].current?.focus();
+  };
+
+  const handleFillDemoOtp = () => {
+    setOtpDigits(['4', '8', '2', '7']);
+    setOtpError('');
+    toast.info('Demo code 4827 filled!');
+    otpInputRefs[3].current?.focus();
+  };
+
+  const handleResendOtp = () => {
+    if (!canResend) return;
+    setOtpTimer(30);
+    setCanResend(false);
+    const targetDest = up ? phone : identifier;
+    toast.success(`New OTP sent to ${targetDest} (Demo OTP: 4827)`);
+    setOtpDigits(['', '', '', '']);
+    otpInputRefs[0].current?.focus();
+  };
+
+  // Step 2: Final Verification Submit
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const code = otpDigits.join('');
+
+    if (code.length < 4) {
+      setOtpError('Please enter all 4 digits of the verification code.');
+      setShake(true);
+      setTimeout(() => setShake(false), 450);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setOtpError('');
+
+    try {
+      const assignedRole = role === 'partner' ? 'worker' : 'customer';
+      const targetIdentifier = up ? phone.trim() : identifier.trim();
+
+      if (!up) {
+        // Sign-in with OTP
+        await login(targetIdentifier, code, assignedRole);
+      } else {
+        // Register with OTP
+        await register({
+          name: name.trim() || (role === 'partner' ? 'Pro Partner' : 'Customer User'),
+          email: regEmail.trim(),
+          phone: phone.trim(),
+          role: assignedRole,
+          trade: role === 'partner' ? trade : undefined,
+          visitRate: role === 'partner' ? (Number(visitRate) || 450) : undefined,
+          otpVerified: true,
+          kycStatus: role === 'partner' ? 'under_verification' : 'approved',
+        });
+      }
+
+      // If a Partner is creating an account, present the Complete Profile (Aadhaar & PAN) Card
+      if (up && role === 'partner') {
+        setIsSubmitting(false);
+        setOtpStep(false);
+        setShowPartnerKyc(true);
+        toast.success('Mobile verified! Please complete your profile with Aadhaar & PAN.');
+        return;
+      }
+
+      const isAdmin = /^admin@/i.test(targetIdentifier);
+      const destination = isAdmin ? 'Admin Control Center' : 'Customer Portal';
+      const title = up ? 'Account verified!' : 'You’re in!';
+      const msg = `Doorstep safety verified. Opening ${destination}…`;
+
+      setOkTitle(title);
+      setOkMsg(msg);
+      setIsSubmitting(false);
+      setIsSuccess(true);
+
+      redirectTimerRef.current = setTimeout(() => {
+        onNavigate('dashboard');
+      }, 2200);
+    } catch (err) {
+      setIsSubmitting(false);
+      setOtpError(err.message || 'Invalid verification code. Use demo OTP 4827.');
+      setShake(true);
+      setTimeout(() => setShake(false), 450);
+    }
+  };
+
+  // Partner KYC Document Handlers
+  const handleAadhaarUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setKycAadharFile(file.name);
+      setKycErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.aadharFile;
+        return copy;
+      });
+    }
+  };
+
+  const handlePanUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setKycPanFile(file.name);
+      setKycErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.panFile;
+        return copy;
+      });
+    }
+  };
+
+  const handleKycDemoFill = () => {
+    setKycAadharFile('aadhaar_card_front_back.pdf');
+    setKycAadharNo('5421 8921 4410');
+    setKycPanFile('pan_card_permanent_acc.jpg');
+    setKycPanNo('ABCDE1234F');
+    setKycErrors({});
+    toast.info('Sample Aadhaar and PAN documents attached!');
+  };
+
+  // Auto-redirect to dashboard after KYC submission
+  useEffect(() => {
+    if (kycSubmitted) {
+      const timer = setTimeout(() => {
+        onNavigate('dashboard');
+      }, 2600);
+      return () => clearTimeout(timer);
+    }
+  }, [kycSubmitted, onNavigate]);
+
+  const handleKycSubmit = (e) => {
+    e.preventDefault();
+    const newKycErrors = {};
+    if (!kycAadharFile) newKycErrors.aadharFile = true;
+    if (!kycPanFile) newKycErrors.panFile = true;
+
+    if (Object.keys(newKycErrors).length > 0) {
+      setKycErrors(newKycErrors);
+      setShake(true);
+      setTimeout(() => setShake(false), 450);
+      toast.error('Please attach both Aadhaar Card and PAN Card to proceed.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    // Update local database & context with KYC info
+    updateUser({
+      kycStatus: 'under_verification',
+      aadharUploaded: true,
+      panUploaded: true,
+      aadharNumber: kycAadharNo || '5421 8921 4410',
+      panNumber: kycPanNo || 'ABCDE1234F',
+    });
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setKycSubmitted(true);
+      toast.success('KYC documents submitted for Admin checking.');
+    }, 600);
+  };
+
+  const currentDisplayTarget = up
+    ? (phone ? `+91 ${phone}${regEmail ? ` (${regEmail})` : ''}` : (regEmail || 'your details'))
+    : identifier;
 
   return (
-    <div className="auth-page-wrapper">
-      {/* Dynamic Ambient Mesh Background */}
-      <div className="auth-mesh-bg" />
+    <div className="auth-signin-page">
+      {/* ── Left Side Hero Banner ── */}
+      <aside className="side">
+        <div className="orb o1"></div>
+        <div className="orb o2"></div>
+        <div className="orb o3"></div>
+        <svg className="gear" viewBox="0 0 100 100" aria-hidden="true">
+          <path
+            fill="#fff"
+            d="M43 4h14l2 11a36 36 0 0 1 9 4l9-7 10 10-7 9a36 36 0 0 1 4 9l11 2v14l-11 2a36 36 0 0 1-4 9l7 9-10 10-9-7a36 36 0 0 1-9 4l-2 11H43l-2-11a36 36 0 0 1-9-4l-9 7-10-10 7-9a36 36 0 0 1-4-9L5 57V43l11-2a36 36 0 0 1 4-9l-7-9 10-10 9 7a36 36 0 0 1 9-4zM50 34a16 16 0 1 0 0 32 16 16 0 0 0 0-32z"
+          />
+        </svg>
 
-      {/* ── Top Dedicated Navigation Bar (Compact 56px) ── */}
-      <header
-        style={{
-          position: 'relative',
-          zIndex: 40,
-          background: 'color-mix(in srgb, var(--card) 85%, transparent)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid var(--line)',
-          height: 56,
-          flexShrink: 0,
-        }}
-      >
-        <div
-          className="wrap auth-header-wrap"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: '100%',
-            gap: 12,
-          }}
-        >
-          {/* Brand Logo */}
-          <button
-            onClick={() => onNavigate('home')}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              padding: 0,
-              flexShrink: 0,
-            }}
-            title="Return to Fixovia Home"
-          >
-            <img
-              src="/logo.png"
-              alt="Fixovia"
-              className="auth-logo-img"
-              style={{ height: 36, width: 'auto', display: 'block' }}
-            />
-          </button>
+        <p className="hand">Welcome back</p>
+        <h1>Your home’s repair crew, one tap away.</h1>
+        <p className="sub">
+          Sign in to track your pro live, share your safety PIN and pay a clear, itemized bill.
+        </p>
 
-          {/* Right Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <ThemeToggle theme={theme} onToggle={toggleTheme} size={34} />
-
-            <button
-              onClick={() => onNavigate('home')}
-              className="btn-outline auth-back-btn"
-              style={{
-                padding: '6px 14px',
-                fontSize: '0.84rem',
-                borderRadius: 'var(--radius-full)',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <span className="auth-back-label-desktop">← Back to Website</span>
-              <span className="auth-back-label-mobile">← Back</span>
-            </button>
+        <div className="stack" aria-hidden="true">
+          <div className="fc c1">
+            <i>✓</i>
+            <div>
+              <b>Pro verified</b>
+              <small>4.9 ★ · 7-point check</small>
+            </div>
+          </div>
+          <div className="fc c2">
+            <small>Your safety PIN</small>
+            <span>4827</span>
+          </div>
+          <div className="fc c3">
+            <div>
+              <b>Rahul is on the way</b>
+              <small>Electrician · arrives in 18 min</small>
+            </div>
+            <div className="bar">
+              <u></u>
+            </div>
           </div>
         </div>
-      </header>
+      </aside>
 
-      {/* ── Main Auth Stage (Fitted in Remaining Viewport Height) ── */}
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          position: 'relative',
-          zIndex: 1,
-          overflow: 'hidden',
-          width: '100%',
-        }}
-      >
-        <div className={`auth-split-grid ${tab === 'partner' ? 'partner-layout' : 'customer-layout'}`}>
-          {/* ══════════════════════════════════════════
-              LOGIN CARD COLUMN: Left for Customer, Right for Partner
-             ══════════════════════════════════════════ */}
-          <div className="auth-form-column">
-            <div style={{ width: '100%', maxWidth: 430, margin: '0 auto' }}>
-              <div
-                className="card auth-card-glow"
-                style={{
-                  padding: '26px 28px 22px',
-                  borderRadius: 'var(--radius-lg)',
-                  background: 'var(--card)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  border: tab === 'partner' ? '1px solid rgba(16, 185, 129, 0.32)' : '1px solid rgba(37, 99, 235, 0.26)',
-                  boxShadow: tab === 'partner'
-                    ? '0 24px 60px -12px rgba(16, 185, 129, 0.22), 0 0 0 1px rgba(16, 185, 129, 0.15), var(--shadow-xl)'
-                    : '0 24px 60px -12px rgba(37, 99, 235, 0.22), 0 0 0 1px rgba(37, 99, 235, 0.15), var(--shadow-xl)',
-                  transform: isSuccess
-                    ? (tab === 'partner' ? 'translateX(100px)' : 'translateX(-100px)')
-                    : 'translateX(0)',
-                  opacity: isSuccess ? 0 : 1,
-                  transition: 'transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.38s ease, box-shadow 0.45s ease, border-color 0.45s ease',
-                }}
-              >
-              {/* Dynamic Animated Gradient Accent Bar */}
-              <div
-                className="auth-gradient-bar"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 4,
-                  background: tab === 'partner'
-                    ? 'linear-gradient(90deg, #059669, #0d9488, #06b6d4, #059669)'
-                    : 'linear-gradient(90deg, #2563eb, #06b6d4, #0d9488, #2563eb)',
-                  backgroundSize: '300% 100%',
-                  animation: 'gradientSlide 4s ease infinite',
-                }}
-              />
-
-              {/* Card Header */}
-              <div style={{ marginBottom: 16 }}>
-
-                <h1
-                  style={{
-                    fontSize: '1.45rem',
-                    fontWeight: 800,
-                    color: 'var(--charcoal)',
-                    letterSpacing: '-0.02em',
-                    marginBottom: 3,
-                    lineHeight: 1.2,
-                  }}
+      {/* ── Right Side Main Auth Card ── */}
+      <main className="main">
+        <div className="shell">
+          <div className={`card ${shake ? 'shake' : ''}`}>
+            {forgot ? (
+              /* ── Dedicated Forgot Password / Help Card ── */
+              <div className="forgot-card anim-fade">
+                <button
+                  type="button"
+                  className="forgot-back-btn"
+                  onClick={handleCloseForgot}
+                  aria-label="Back to sign in"
                 >
-                  {mode === 'signin' ? 'Welcome back' : 'Create account'}
-                </h1>
-                <p style={{ fontSize: 13, color: 'var(--slate)', lineHeight: 1.4 }}>
-                  {mode === 'signin'
-                    ? 'Sign in to access your bookings, live tracking and verified pros.'
-                    : 'Join thousands of happy homeowners and certified pros on Fixovia.'}
-                </p>
-              </div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                  <span>Back to sign in</span>
+                </button>
 
-              {/* Role Switcher Tabs (Fluid Sliding Pill Segmented Control) */}
-              <div
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  background: 'var(--bg-stone-100)',
-                  padding: 4,
-                  borderRadius: 'var(--radius-full)',
-                  marginBottom: 16,
-                  border: '1px solid var(--line)',
-                  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.05)',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Buttery-Smooth Gliding Slider Pill */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 4,
-                    bottom: 4,
-                    left: 4,
-                    width: 'calc(50% - 4px)',
-                    borderRadius: 'var(--radius-full)',
-                    transform: tab === 'partner' ? 'translateX(100%)' : 'translateX(0%)',
-                    transition: 'transform 0.44s cubic-bezier(0.34, 1.45, 0.64, 1), background 0.35s ease, box-shadow 0.35s ease',
-                    background: tab === 'partner'
-                      ? 'linear-gradient(135deg, #059669 0%, #0d9488 100%)'
-                      : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                    boxShadow: tab === 'partner'
-                      ? '0 6px 20px -2px rgba(5, 150, 105, 0.52), inset 0 1px 1.5px rgba(255, 255, 255, 0.45)'
-                      : '0 6px 20px -2px rgba(37, 99, 235, 0.52), inset 0 1px 1.5px rgba(255, 255, 255, 0.45)',
-                    zIndex: 1,
-                    pointerEvents: 'none',
-                  }}
-                />
+                {!forgotSuccess ? (
+                  <>
+                    <div className="forgot-header">
+                      <div className="forgot-icon-wrap">
+                        <span className="forgot-icon">🔐</span>
+                      </div>
+                      <h2>Need login help?</h2>
+                      <p className="lead">
+                        Enter your registered mobile number or email. We’ll send you an instant login verification code.
+                      </p>
+                    </div>
 
-                {[
-                  {
-                    id: 'customer',
-                    label: 'Customer',
-                    icon: (
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    id: 'partner',
-                    label: 'Partner / Pro',
-                    icon: (
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                      </svg>
-                    ),
-                  },
-                ].map((t) => {
-                  const isActive = tab === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => handleTabChange(t.id)}
-                      style={{
-                        position: 'relative',
-                        zIndex: 2,
-                        flex: 1,
-                        padding: '9px 14px',
-                        borderRadius: 'var(--radius-full)',
-                        border: 'none',
-                        background: 'transparent',
-                        color: isActive ? '#ffffff' : 'var(--slate)',
-                        fontWeight: isActive ? 800 : 600,
-                        fontSize: '0.88rem',
-                        cursor: 'pointer',
-                        transition: 'color 0.25s ease, transform 0.15s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) e.currentTarget.style.color = 'var(--charcoal)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) e.currentTarget.style.color = 'var(--slate)';
-                      }}
-                      onMouseDown={(e) => {
-                        e.currentTarget.style.transform = 'scale(0.96)';
-                      }}
-                      onMouseUp={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <span
-                        key={`${t.id}-${isActive}`}
-                        className={isActive ? 'animate-tab-icon' : ''}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                        }}
+                    <form onSubmit={handleForgotSubmit} noValidate style={{ marginTop: 20 }}>
+                      <div className="fld">
+                        <label htmlFor="forgotInput">Email or mobile number</label>
+                        <div className={`in ${forgotError ? 'bad' : ''}`}>
+                          <input
+                            id="forgotInput"
+                            type="text"
+                            autoComplete="username"
+                            placeholder="name@example.com or 98765 43210"
+                            value={forgotInput}
+                            onChange={(e) => {
+                              setForgotInput(e.target.value);
+                              if (forgotError) setForgotError('');
+                            }}
+                            autoFocus
+                          />
+                        </div>
+                        {forgotError && <div className="err" style={{ display: 'block' }}>{forgotError}</div>}
+                      </div>
+
+                      <button
+                        className={`go ${forgotSubmitting ? 'load' : ''}`}
+                        type="submit"
+                        disabled={forgotSubmitting}
+                        onClick={handleButtonClick}
+                        style={{ marginTop: 20 }}
                       >
-                        {t.icon}
-                      </span>
-                      <span>{t.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                        {btnRipples.map((r) => (
+                          <span
+                            key={r.id}
+                            className="btn-ripple"
+                            style={{ left: r.x, top: r.y }}
+                          />
+                        ))}
+                        <span id="goT">
+                          {forgotSubmitting ? 'Sending code…' : 'Send login code'}
+                        </span>
+                      </button>
+                    </form>
 
-              {/* Form Fields with role-transition slide */}
-              <form key={tab} className="animate-role-slide" onSubmit={handleSubmit}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {mode === 'register' && (
-                    <div className="animate-fade-in">
-                      <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--charcoal)', display: 'block', marginBottom: 4 }}>
-                        Full Name
-                      </label>
+                    <div className="forgot-footer-help">
+                      <small>
+                        Ready to sign in?{' '}
+                        <button type="button" className="link-button" onClick={handleCloseForgot}>
+                          Sign in with OTP
+                        </button>
+                      </small>
+                    </div>
+                  </>
+                ) : (
+                  <div className="forgot-success-state anim-fade">
+                    <div className="forgot-success-badge">✓</div>
+                    <h2>Verification code sent!</h2>
+                    <p className="lead" style={{ marginTop: 8 }}>
+                      We’ve dispatched a login code to <strong style={{ color: 'var(--ink)' }}>{forgotInput}</strong>.
+                    </p>
+
+                    <div className="forgot-notice-box">
+                      <span style={{ fontSize: '1.2rem' }}>💡</span>
+                      <div>
+                        Please check your SMS or inbox. You can use demo code <strong>4827</strong> to sign in instantly.
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="go"
+                      onClick={() => {
+                        handleCloseForgot();
+                        setOtpStep(true);
+                      }}
+                      style={{ marginTop: 24 }}
+                    >
+                      <span>Enter verification code</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : showPartnerKyc ? (
+              /* ── Step 3: Partner KYC Profile Completion (Aadhaar & PAN) ── */
+              <div className="partner-kyc-card anim-fade">
+                {!kycSubmitted ? (
+                  <>
+                    <div className="kyc-header">
+                      <div className="kyc-header-icon-wrap">
+                        <span>🪪</span>
+                      </div>
+                      <h2>Complete your profile</h2>
+                      <p className="lead">
+                        Upload your Government ID proofs for verification by Fixovia Admin.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleKycSubmit} noValidate>
+                      {/* Document 1: Aadhaar Card */}
+                      <div className="kyc-doc-section">
+                        <div className="kyc-doc-head">
+                          <div className="kyc-doc-title">
+                            <span>🇮🇳</span>
+                            <span>Aadhaar Card (Front & Back)</span>
+                          </div>
+                          <span className={`kyc-doc-badge ${kycAadharFile ? 'uploaded' : ''}`}>
+                            {kycAadharFile ? '✓ Attached' : 'Required'}
+                          </span>
+                        </div>
+
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          ref={aadharFileRef}
+                          style={{ display: 'none' }}
+                          onChange={handleAadhaarUpload}
+                        />
+
+                        <div
+                          className={`kyc-upload-dropzone ${kycAadharFile ? 'has-file' : ''} ${kycErrors.aadharFile ? 'bad' : ''}`}
+                          onClick={() => aadharFileRef.current?.click()}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          {kycAadharFile ? (
+                            <div className="kyc-file-info">
+                              <span>📄</span>
+                              <span>{kycAadharFile}</span>
+                              <small style={{ color: 'var(--slate)', textDecoration: 'underline' }}>Change</small>
+                            </div>
+                          ) : (
+                            <>
+                              <span style={{ fontSize: '1.4rem' }}>📁</span>
+                              <b style={{ fontSize: '0.88rem', color: 'var(--coral2)' }}>Choose Aadhaar Document</b>
+                              <small style={{ color: 'var(--mute)' }}>PDF, JPG, or PNG (Max 5MB)</small>
+                            </>
+                          )}
+                        </div>
+                        {kycErrors.aadharFile && (
+                          <div className="err" style={{ display: 'block', marginTop: 4 }}>
+                            Please upload your Aadhaar card document.
+                          </div>
+                        )}
+
+                        <div className="fld" style={{ marginTop: 10 }}>
+                          <label htmlFor="aadhaarNo" style={{ fontSize: '0.82rem' }}>Aadhaar Number (12 Digits)</label>
+                          <div className="in">
+                            <input
+                              id="aadhaarNo"
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={14}
+                              placeholder="5421 8921 4410"
+                              value={kycAadharNo}
+                              onChange={(e) => setKycAadharNo(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Document 2: PAN Card */}
+                      <div className="kyc-doc-section">
+                        <div className="kyc-doc-head">
+                          <div className="kyc-doc-title">
+                            <span>💳</span>
+                            <span>PAN Card</span>
+                          </div>
+                          <span className={`kyc-doc-badge ${kycPanFile ? 'uploaded' : ''}`}>
+                            {kycPanFile ? '✓ Attached' : 'Required'}
+                          </span>
+                        </div>
+
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          ref={panFileRef}
+                          style={{ display: 'none' }}
+                          onChange={handlePanUpload}
+                        />
+
+                        <div
+                          className={`kyc-upload-dropzone ${kycPanFile ? 'has-file' : ''} ${kycErrors.panFile ? 'bad' : ''}`}
+                          onClick={() => panFileRef.current?.click()}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          {kycPanFile ? (
+                            <div className="kyc-file-info">
+                              <span>📄</span>
+                              <span>{kycPanFile}</span>
+                              <small style={{ color: 'var(--slate)', textDecoration: 'underline' }}>Change</small>
+                            </div>
+                          ) : (
+                            <>
+                              <span style={{ fontSize: '1.4rem' }}>📁</span>
+                              <b style={{ fontSize: '0.88rem', color: 'var(--coral2)' }}>Choose PAN Document</b>
+                              <small style={{ color: 'var(--mute)' }}>PDF, JPG, or PNG (Max 5MB)</small>
+                            </>
+                          )}
+                        </div>
+                        {kycErrors.panFile && (
+                          <div className="err" style={{ display: 'block', marginTop: 4 }}>
+                            Please upload your PAN card document.
+                          </div>
+                        )}
+
+                        <div className="fld" style={{ marginTop: 10 }}>
+                          <label htmlFor="panNo" style={{ fontSize: '0.82rem' }}>PAN Number (10 Digits)</label>
+                          <div className="in">
+                            <input
+                              id="panNo"
+                              type="text"
+                              maxLength={10}
+                              placeholder="ABCDE1234F"
+                              style={{ textTransform: 'uppercase' }}
+                              value={kycPanNo}
+                              onChange={(e) => setKycPanNo(e.target.value.toUpperCase())}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Auto-Fill Helper Chip */}
+                      <div style={{ textAlign: 'center' }}>
+                        <div
+                          className="kyc-demo-chip"
+                          onClick={handleKycDemoFill}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <span>⚡ Auto-fill sample Aadhaar & PAN</span>
+                        </div>
+                      </div>
+
+                      <button
+                        className={`go ${isSubmitting ? 'load' : ''}`}
+                        type="submit"
+                        disabled={isSubmitting}
+                        onClick={handleButtonClick}
+                      >
+                        {btnRipples.map((r) => (
+                          <span
+                            key={r.id}
+                            className="btn-ripple"
+                            style={{ left: r.x, top: r.y }}
+                          />
+                        ))}
+                        <span id="goT">
+                          {isSubmitting ? 'Uploading…' : 'Submit for Verification →'}
+                        </span>
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  /* ── 24-Hour Checking Confirmation State ── */
+                  <div className="kyc-checking-state">
+                    <div className="kyc-clock-badge">⏳</div>
+                    <h2>Your account is under checking</h2>
+                    <p className="lead" style={{ maxWidth: 420, margin: '0 auto', color: 'var(--slate)' }}>
+                      It will go through the verification process and will work in under 24 hours.
+                    </p>
+
+                    <button
+                      type="button"
+                      className="go"
+                      style={{ marginTop: 24 }}
+                      onClick={() => onNavigate('dashboard')}
+                    >
+                      <span>Go to Dashboard →</span>
+                    </button>
+                    <small style={{ display: 'block', marginTop: 14, color: 'var(--mute)', fontSize: '0.86rem' }}>
+                      Redirecting to your dashboard in a moment…
+                    </small>
+                  </div>
+                )}
+              </div>
+            ) : otpStep ? (
+              /* ── Step 2: Sleek 4-Digit OTP Verification Screen ── */
+              <div className="otp-screen-wrap">
+                <button
+                  type="button"
+                  className="otp-back-nav"
+                  onClick={() => setOtpStep(false)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                  <span>Back to details</span>
+                </button>
+
+                <div className="otp-target-badge">
+                  <span>📱 Code sent to <strong>{currentDisplayTarget}</strong></span>
+                  <span className="edit-link" onClick={() => setOtpStep(false)}>Edit</span>
+                </div>
+
+                <h2>Enter 4-digit code</h2>
+                <p className="lead">
+                  Enter the verification OTP sent to your device to {up ? 'create your account' : 'sign in'}.
+                </p>
+
+                <form onSubmit={handleVerifyOtp} noValidate>
+                  {/* 4 Discrete Boxes */}
+                  <div className="otp-boxes">
+                    {otpDigits.map((digit, idx) => (
                       <input
-                        className="input"
+                        key={idx}
+                        ref={otpInputRefs[idx]}
                         type="text"
-                        placeholder="e.g. Arjun Mehta"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        autoFocus
-                        style={{ padding: '10px 14px', fontSize: '0.9rem' }}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={1}
+                        className={`otp-box ${digit ? 'filled' : ''} ${otpError ? 'bad' : ''}`}
+                        value={digit}
+                        onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        onPaste={handleOtpPaste}
+                        autoFocus={idx === 0}
+                        aria-label={`Digit ${idx + 1}`}
                       />
+                    ))}
+                  </div>
+
+                  {otpError && (
+                    <div className="err" style={{ display: 'block', textAlign: 'center', marginBottom: 14 }}>
+                      {otpError}
                     </div>
                   )}
 
-                  <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--charcoal)', display: 'block', marginBottom: 4 }}>
-                      Email Address
-                    </label>
-                    <input
-                      className="input"
-                      type="email"
-                      placeholder={tab === 'partner' ? 'worker@fixovia.in' : 'customer@fixovia.in'}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoFocus={mode === 'signin'}
-                      style={{ padding: '10px 14px', fontSize: '0.9rem' }}
-                    />
-                  </div>
+                  {/* Helper row: Demo OTP chip & Resend timer */}
+                  <div className="otp-helper-row">
+                    <div
+                      className="otp-demo-chip"
+                      onClick={handleFillDemoOtp}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to auto-fill demo OTP 4827"
+                    >
+                      <span>🔑 Demo OTP: <strong>4827</strong></span>
+                      <small style={{ opacity: 0.8 }}>(Click to fill)</small>
+                    </div>
 
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--charcoal)' }}>
-                        Password
-                      </label>
-                      {mode === 'signin' && (
+                    <div className="otp-resend-text">
+                      {canResend ? (
                         <button
                           type="button"
-                          onClick={() => toast.info('Default demo password is demo123 (or use 1-click login below)')}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: 11,
-                            color: 'var(--primary)',
-                            fontWeight: 600,
-                          }}
+                          className="otp-resend-btn"
+                          onClick={handleResendOtp}
                         >
-                          Forgot?
+                          Didn't get code? Resend OTP
                         </button>
+                      ) : (
+                        <span>Resend OTP in <strong>{otpTimer}s</strong></span>
                       )}
-                    </div>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        className="input"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        style={{ padding: '10px 42px 10px 14px', fontSize: '0.9rem' }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPw(!showPassword)}
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        title={showPassword ? 'Hide password' : 'Show password'}
-                        style={{
-                          position: 'absolute',
-                          right: 8,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: 'var(--slate)',
-                          padding: 6,
-                          borderRadius: 'var(--radius-sm)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'color 0.2s ease, transform 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = tab === 'partner' ? '#059669' : '#2563eb';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color = 'var(--slate)';
-                        }}
-                      >
-                        {showPassword ? (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.1"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                            <line x1="1" y1="1" x2="23" y2="23" />
-                          </svg>
-                        ) : (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.1"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        )}
-                      </button>
                     </div>
                   </div>
 
-                  {error && (
-                    <div
-                      className="animate-shake"
-                      style={{
-                        padding: '8px 12px',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.25)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 12,
-                        color: '#ef4444',
-                        fontWeight: 600,
-                      }}
+                  {/* Verify & Proceed CTA */}
+                  <button
+                    className={`go ${isSubmitting ? 'load' : ''}`}
+                    type="submit"
+                    disabled={isSubmitting}
+                    onClick={handleButtonClick}
+                  >
+                    {btnRipples.map((r) => (
+                      <span
+                        key={r.id}
+                        className="btn-ripple"
+                        style={{ left: r.x, top: r.y }}
+                      />
+                    ))}
+                    <span id="goT">
+                      {isSubmitting
+                        ? 'Verifying…'
+                        : (up
+                          ? (role === 'partner' ? 'Verify & Apply →' : 'Verify & Create account →')
+                          : 'Verify & Sign in →')}
+                    </span>
+                  </button>
+                </form>
+
+                {/* 1-Click Demo Quick Switcher */}
+                <div className="demo" style={{ marginTop: 24 }}>
+                  1-click demo accounts
+                  <div>
+                    <button
+                      type="button"
+                      data-d="customer"
+                      onClick={() => handleDemoClick('customer')}
                     >
-                      ⚠️ {error}
+                      Customer
+                    </button>
+                    <button
+                      type="button"
+                      data-d="partner"
+                      onClick={() => handleDemoClick('partner')}
+                    >
+                      Partner
+                    </button>
+                    <button
+                      type="button"
+                      data-d="admin"
+                      onClick={() => handleDemoClick('admin')}
+                    >
+                      Admin
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ── Step 1: Role, Details & Get OTP View ── */
+              <>
+                {/* Role Switcher Tabs */}
+                <div className={`tabs ${role === 'partner' ? 'p2' : ''}`} id="tabs" role="tablist">
+                  <span className="pill"></span>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={role === 'customer'}
+                    data-r="customer"
+                    onClick={() => handleRoleChange('customer')}
+                  >
+                    Customer
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={role === 'partner'}
+                    data-r="partner"
+                    onClick={() => handleRoleChange('partner')}
+                  >
+                    Partner
+                  </button>
+                </div>
+
+                {/* Title & Subtitle */}
+                <h2 id="ttl" className={roleAnimDir ? `slide-${roleAnimDir}` : ''}>
+                  {up
+                    ? (role === 'partner' ? 'Become a partner' : 'Create your account')
+                    : (role === 'partner' ? 'Partner sign in' : 'Welcome back')}
+                </h2>
+                <p className={`lead ${roleAnimDir ? `slide-${roleAnimDir}` : ''}`} id="lead">
+                  {up
+                    ? (role === 'partner' ? 'Join Fixovia and get steady local jobs, with no marketing needed.' : 'Book verified pros in under two minutes.')
+                    : (role === 'partner' ? 'Sign in with your mobile number to view jobs & earnings.' : 'Sign in with your phone or email using instant OTP.')}
+                </p>
+
+                {/* Form: Step 1 */}
+                <form id="f" noValidate onSubmit={handleRequestOtp}>
+                  {/* Registration Fields: Full Name, Email & Mobile Number */}
+                  <div className={`opt ${up ? 'show' : ''}`} id="oName">
+                    <div>
+                      <div className="fld">
+                        <label htmlFor="name">Full name</label>
+                        <div className={`in ${errors.name ? 'bad' : ''}`}>
+                          <input
+                            id="name"
+                            autoComplete="name"
+                            placeholder="Aarav Sharma"
+                            value={name}
+                            onChange={(e) => {
+                              setName(e.target.value);
+                              clearErr('name');
+                            }}
+                          />
+                        </div>
+                        <div className="err">Please enter your name.</div>
+                      </div>
+                      <div className="fld">
+                        <label htmlFor="regEmail">Email address</label>
+                        <div className={`in ${errors.email ? 'bad' : ''}`}>
+                          <input
+                            id="regEmail"
+                            type="email"
+                            autoComplete="email"
+                            placeholder="aarav@example.com"
+                            value={regEmail}
+                            onChange={(e) => {
+                              setRegEmail(e.target.value);
+                              clearErr('email');
+                            }}
+                          />
+                        </div>
+                        <div className="err">Enter a valid email address.</div>
+                      </div>
+                      <div className="fld">
+                        <label htmlFor="phone">Mobile number</label>
+                        <div className={`in ${errors.phone ? 'bad' : ''}`}>
+                          <input
+                            id="phone"
+                            type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel"
+                            placeholder="98765 43210"
+                            value={phone}
+                            onChange={(e) => {
+                              setPhone(e.target.value);
+                              clearErr('phone');
+                            }}
+                          />
+                        </div>
+                        <div className="err">Enter a valid 10-digit mobile number.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Partner Trade Selection Popover */}
+                  <div className={`opt ${up && role === 'partner' ? 'show' : ''}`} id="oTrade">
+                    <div>
+                      <div className="fld">
+                        <label id="tradeLabel">Your trade</label>
+                        <div className="trade-select-wrap" ref={tradeRef}>
+                          <button
+                            type="button"
+                            id="trade"
+                            className={`custom-trade-trigger ${isTradeOpen ? 'open' : ''} ${errors.trade ? 'bad' : ''}`}
+                            onClick={() => setIsTradeOpen((prev) => !prev)}
+                            aria-haspopup="listbox"
+                            aria-expanded={isTradeOpen}
+                            aria-labelledby="tradeLabel"
+                          >
+                            <div className="trade-trigger-content">
+                              {trade ? (
+                                <div className="trade-selected-content">
+                                  <span className="trade-pill-icon">
+                                    {TRADE_OPTIONS.find((t) => t.value === trade)?.icon || '🛠'}
+                                  </span>
+                                  <span className="trade-pill-text">{trade}</span>
+                                </div>
+                              ) : (
+                                <span className="trade-placeholder">Choose your trade</span>
+                              )}
+                            </div>
+                            <svg
+                              className="trade-chevron"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                          </button>
+
+                          {/* Floating Popover Menu */}
+                          {isTradeOpen && (
+                            <div className="trade-dropdown-menu" role="listbox" aria-labelledby="tradeLabel">
+                              <div className="trade-menu-header">Select your primary trade</div>
+                              {TRADE_OPTIONS.map((opt) => {
+                                const isSelected = trade === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    className={`trade-option-item ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => {
+                                      setTrade(opt.value);
+                                      clearErr('trade');
+                                      setIsTradeOpen(false);
+                                      if (!visitRate || Object.values(TRADE_DEFAULT_RATES).includes(Number(visitRate))) {
+                                        setVisitRate(TRADE_DEFAULT_RATES[opt.value] || 450);
+                                        clearErr('visitRate');
+                                      }
+                                    }}
+                                  >
+                                    <div className="trade-option-left">
+                                      <div className="trade-option-icon">{opt.icon}</div>
+                                      <div className="trade-option-text">
+                                        <b>{opt.label}</b>
+                                        <small>{opt.desc}</small>
+                                      </div>
+                                    </div>
+                                    {isSelected && <span className="trade-option-check">✓</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        {errors.trade && (
+                          <div className="err" style={{ display: 'block', maxHeight: 'none', marginTop: 6 }}>
+                            Pick your trade to continue.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Partner Fixed Visiting & Inspection Rate */}
+                  <div className={`opt ${up && role === 'partner' ? 'show' : ''}`} id="oRate">
+                    <div>
+                      <div className="fld">
+                        <label id="rateLabel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>Fixed Visiting & Inspection Charge</span>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--coral2)', fontWeight: 600 }}>Standard Doorstep Rate</span>
+                        </label>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <span style={{ position: 'absolute', left: 14, color: 'var(--ink)', fontWeight: 700, fontSize: '1rem', pointerEvents: 'none', zIndex: 2 }}>₹</span>
+                          <input
+                            type="number"
+                            id="visitRate"
+                            min="99"
+                            max="2999"
+                            step="10"
+                            placeholder="e.g. 450"
+                            style={{ paddingLeft: 34, fontWeight: 700 }}
+                            value={visitRate}
+                            onChange={(e) => {
+                              setVisitRate(e.target.value);
+                              clearErr('visitRate');
+                            }}
+                            className={errors.visitRate ? 'bad' : ''}
+                          />
+                        </div>
+                        <small style={{ color: 'var(--mute)', fontSize: '0.78rem', marginTop: 4, display: 'block' }}>
+                          Standard doorstep inspection & diagnosis fee charged for your visit.
+                        </small>
+                        {errors.visitRate && (
+                          <div className="err" style={{ display: 'block', maxHeight: 'none', marginTop: 6 }}>
+                            Please enter a valid fixed visiting rate (minimum ₹99).
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sign-in Identifier (Mobile number or Email) */}
+                  {!up && (
+                    <div className="fld">
+                      <label htmlFor="identifier">Mobile number or email</label>
+                      <div className={`in ${errors.identifier ? 'bad' : ''} ${fieldPulse ? 'field-highlight' : ''}`}>
+                        <input
+                          id="identifier"
+                          type="text"
+                          autoComplete="username"
+                          placeholder="98765 43210 or name@fixovia.in"
+                          value={identifier}
+                          onChange={(e) => {
+                            setIdentifier(e.target.value);
+                            clearErr('identifier');
+                          }}
+                        />
+                      </div>
+                      <div className="err">Enter a valid 10-digit mobile number or email address.</div>
                     </div>
                   )}
 
-                  {/* Submit Button with Dynamic Role Gradient, Glow & Shimmer */}
+                  {/* Options row */}
+                  {!up && (
+                    <div className="row" id="rowIn" style={{ display: 'flex' }}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          id="rem"
+                          checked={rem}
+                          onChange={(e) => setRem(e.target.checked)}
+                        />
+                        {' '}Keep me signed in
+                      </label>
+                      <a
+                        href="#forgot"
+                        id="forgot"
+                        onClick={handleOpenForgot}
+                      >
+                        Need help?
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Submit CTA button to get OTP */}
                   <button
+                    className={`go ${isSubmitting ? 'load' : ''}`}
+                    id="go"
                     type="submit"
-                    className="btn-shine-effect"
-                    disabled={loading || isSuccess}
-                    style={{
-                      width: '100%',
-                      padding: '13px',
-                      fontSize: '0.96rem',
-                      marginTop: 4,
-                      borderRadius: 10,
-                      fontWeight: 800,
-                      letterSpacing: '-0.01em',
-                      border: 'none',
-                      color: '#ffffff',
-                      background: tab === 'partner'
-                        ? 'linear-gradient(135deg, #059669 0%, #0d9488 50%, #0284c7 100%)'
-                        : 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #0d9488 100%)',
-                      boxShadow: tab === 'partner'
-                        ? '0 8px 24px -4px rgba(5, 150, 105, 0.42)'
-                        : '0 8px 24px -4px rgba(37, 99, 235, 0.42)',
-                      cursor: loading || isSuccess ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s ease',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
+                    disabled={isSubmitting}
+                    onClick={handleButtonClick}
                   >
-                    {isSuccess ? (
-                      <span className="animate-success-pop" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        ✓ Success! Redirecting…
-                      </span>
-                    ) : loading ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <span className="animate-spin">⏳</span> Signing in…
-                      </span>
-                    ) : mode === 'signin' ? (
-                      `Sign In as ${tab === 'partner' ? 'Pro Partner' : 'Customer'} →`
-                    ) : (
-                      'Create Account & Start →'
-                    )}
+                    {btnRipples.map((r) => (
+                      <span
+                        key={r.id}
+                        className="btn-ripple"
+                        style={{ left: r.x, top: r.y }}
+                      />
+                    ))}
+                    <span id="goT">
+                      {up
+                        ? (role === 'partner' ? 'Get OTP to apply →' : 'Get OTP to register →')
+                        : 'Get OTP →'}
+                    </span>
                   </button>
+                </form>
+
+                {/* Mode Switcher */}
+                <p className="sw" id="sw">
+                  {up ? (
+                    <>
+                      Already have an account?{' '}
+                      <a
+                        href="#signin"
+                        id="tog"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setUp(false);
+                          clearAllErrors();
+                        }}
+                      >
+                        Sign in with OTP
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      New to Fixovia?{' '}
+                      <a
+                        href="#signup"
+                        id="tog"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setUp(true);
+                          clearAllErrors();
+                        }}
+                      >
+                        {role === 'partner' ? 'Become a partner' : 'Create an account'}
+                      </a>
+                    </>
+                  )}
+                </p>
+
+                {/* 1-Click Demo Accounts */}
+                <div className="demo">
+                  1-click demo accounts
+                  <div>
+                    <button
+                      type="button"
+                      data-d="customer"
+                      onClick={() => handleDemoClick('customer')}
+                    >
+                      Customer
+                    </button>
+                    <button
+                      type="button"
+                      data-d="partner"
+                      onClick={() => handleDemoClick('partner')}
+                    >
+                      Partner
+                    </button>
+                    <button
+                      type="button"
+                      data-d="admin"
+                      onClick={() => handleDemoClick('admin')}
+                    >
+                      Admin
+                    </button>
+                  </div>
                 </div>
-              </form>
+              </>
+            )}
 
-              {/* Mode Toggle */}
-              <div style={{ textAlign: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--line)' }}>
-                <span style={{ fontSize: 13, color: 'var(--slate)' }}>
-                  {mode === 'signin' ? 'New to Fixovia? ' : 'Already have an account? '}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMode(mode === 'signin' ? 'register' : 'signin')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: tab === 'partner' ? '#059669' : 'var(--primary)',
-                    textDecoration: 'underline',
-                    textUnderlineOffset: 3,
-                    transition: 'color 0.3s ease',
-                  }}
-                >
-                  {mode === 'signin'
-                    ? (tab === 'partner' ? 'Apply as Partner' : 'Create Free Account')
-                    : 'Sign In'
-                  }
-                </button>
+            {/* Success Overlay with Animated Checkmark and Progress Bar */}
+            <div className={`ok ${isSuccess ? 'show' : ''}`} id="ok" role="status">
+              <svg viewBox="0 0 80 80" aria-hidden="true">
+                <circle cx="40" cy="40" r="36" />
+                <path d="M24 41l11 11 21-24" />
+              </svg>
+              <h2 id="okT">{okTitle}</h2>
+              <p id="okP">{okMsg}</p>
+              <div className="redir">
+                <u></u>
               </div>
-            </div>
-
-            {/* ── Quick Demo Login (Customer & Partner with Interactive Highlights) ── */}
-            <div
-              className="card animate-fade-in"
-              style={{
-                marginTop: 12,
-                padding: '12px 14px',
-                background: 'var(--card)',
-                border: '1px dashed var(--line)',
-                borderRadius: 'var(--radius-md)',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 800,
-                  color: 'var(--muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  marginBottom: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+              <small>Connecting to Fixovia Dashboard...</small>
+              <button
+                type="button"
+                id="back"
+                onClick={() => {
+                  if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+                  setIsSuccess(false);
                 }}
               >
-                <span>⚡ Instant One-Click Demo Access</span>
-                <span style={{ color: tab === 'partner' ? '#059669' : 'var(--teal)', fontWeight: 700, transition: 'color 0.3s ease' }}>Direct Login</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleTabChange('customer');
-                    quickLogin('customer');
-                  }}
-                  disabled={loading || isSuccess}
-                  className="hover-lift"
-                  style={{
-                    padding: '9px 12px',
-                    background: tab === 'customer' ? 'rgba(37, 99, 235, 0.08)' : 'var(--bg2)',
-                    border: tab === 'customer' ? '1.5px solid #2563eb' : '1.5px solid var(--line)',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    textAlign: 'left',
-                    transition: 'all 0.25s ease',
-                    boxShadow: tab === 'customer' ? '0 2px 10px rgba(37, 99, 235, 0.15)' : 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background: '#2563eb18',
-                      color: '#2563eb',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#2563eb' }}>Customer Demo</div>
-                    <div style={{ fontSize: 10, color: 'var(--slate)', opacity: 0.85 }}>Arjun Mehta</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleTabChange('partner');
-                    quickLogin('worker');
-                  }}
-                  disabled={loading || isSuccess}
-                  className="hover-lift"
-                  style={{
-                    padding: '9px 12px',
-                    background: tab === 'partner' ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg2)',
-                    border: tab === 'partner' ? '1.5px solid #059669' : '1.5px solid var(--line)',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    textAlign: 'left',
-                    transition: 'all 0.25s ease',
-                    boxShadow: tab === 'partner' ? '0 2px 10px rgba(5, 150, 105, 0.15)' : 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background: '#16a34a18',
-                      color: '#16a34a',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#16a34a' }}>Pro Partner Demo</div>
-                    <div style={{ fontSize: 10, color: 'var(--slate)', opacity: 0.85 }}>Raj Kumar (Electrician)</div>
-                  </div>
-                </button>
-              </div>
+                Back to sign in
+              </button>
             </div>
-            </div>
-          </div>
-
-          {/* ═════════════════════════════════════════════════
-              HERO PHOTO COLUMN: Dynamic Cross-Fading Renders
-             ═════════════════════════════════════════════════ */}
-          <div
-            className="auth-hero-half"
-            style={{
-              opacity: isSuccess ? 0 : 1,
-            }}
-          >
-            {/* Customer 3D Cartoon: Phone held naturally on their side, looking down at screen */}
-            <img
-              src="/customer-auth-hero.jpg?v=natural"
-              alt="Fixovia Customer Booking Service"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center 22%',
-                opacity: tab === 'customer' ? 1 : 0,
-                transform: tab === 'customer'
-                  ? 'scale(1.05) translateY(-22px)'
-                  : 'scale(1.08) translateX(28px) translateY(-22px)',
-                transition: 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-                pointerEvents: tab === 'customer' ? 'auto' : 'none',
-                display: 'block',
-              }}
-            />
-
-            {/* Partner 3D Cartoon: Technician and full tool kit 100% visible in 1:1 waist-up portrait */}
-            <img
-              src="/partner-auth-hero.jpg?v=1to1"
-              alt="Fixovia Certified Pro Technician"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center center',
-                opacity: tab === 'partner' ? 1 : 0,
-                transform: tab === 'partner' ? 'scale(1) translateX(0)' : 'scale(1.06) translateX(-28px)',
-                transition: 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-                pointerEvents: tab === 'partner' ? 'auto' : 'none',
-                display: 'block',
-              }}
-            />
           </div>
         </div>
+
+        {/* Footer */}
+        <p className="foot">
+          © 2026 Fixovia · Delhi-NCR · Mumbai · Bengaluru · Hyderabad · Pune
+        </p>
       </main>
     </div>
   );

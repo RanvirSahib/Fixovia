@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 /* ── Demo accounts for quick dev login ── */
 export const DEMO_ACCOUNTS = {
   customer: { email: 'customer@fixovia.in', password: 'demo123', role: 'customer', name: 'Arjun Mehta' },
-  worker:   { email: 'worker@fixovia.in',   password: 'demo123', role: 'worker',   name: 'Raj Kumar'   },
+  worker:   { email: 'worker@fixovia.in',   password: 'demo123', role: 'worker',   name: 'Raj Kumar', trade: 'Electrician', visitRate: 499 },
   admin:    { email: 'admin@fixovia.in',     password: 'demo123', role: 'admin',    name: 'Admin User'  },
 };
 
@@ -25,7 +25,7 @@ export const getLocalDb = () => {
   // Initial seed with default demo accounts
   const seed = [
     { id: 'usr-customer', email: 'customer@fixovia.in', password: 'demo123', role: 'customer', name: 'Arjun Mehta' },
-    { id: 'usr-worker',   email: 'worker@fixovia.in',   password: 'demo123', role: 'worker',   name: 'Raj Kumar'   },
+    { id: 'usr-worker',   email: 'worker@fixovia.in',   password: 'demo123', role: 'worker',   name: 'Raj Kumar', trade: 'Electrician', visitRate: 499 },
     { id: 'usr-admin',    email: 'admin@fixovia.in',    password: 'demo123', role: 'admin',    name: 'Admin User'  },
   ];
   try {
@@ -68,27 +68,28 @@ export function AuthProvider({ children }) {
     setError(null);
   }, []);
 
-  const login = useCallback(async (email, password, fallbackRole = 'customer') => {
+  const login = useCallback(async (identifier, otpOrPw = '4827', fallbackRole = 'customer') => {
     setLoading(true);
     setError(null);
     try {
-      const cleanEmail = (email || '').trim().toLowerCase();
-      const cleanPw = (password || '').trim();
+      const cleanId = (identifier || '').trim().toLowerCase();
+      if (!cleanId) throw new Error('Please enter your mobile number or email.');
 
-      if (!cleanEmail) throw new Error('Please enter a valid email address.');
-      if (!cleanPw) throw new Error('Please enter your password.');
+      const cleanPhone = cleanId.replace(/\s|-/g, '').replace(/^\+?91/, '');
+      const isPhone = /^\d{10}$/.test(cleanPhone);
+      const email = isPhone ? `${cleanPhone}@fixovia.in` : cleanId;
 
       // 1. Search persistent local database
       const db = getLocalDb();
-      let matched = db.find((u) => u.email.toLowerCase() === cleanEmail);
+      let matched = db.find((u) => (u.email && u.email.toLowerCase() === email) || (u.phone && u.phone === cleanPhone));
 
       // 2. Check demo accounts fallback
       if (!matched) {
         const demo = Object.values(DEMO_ACCOUNTS).find(
-          (d) => d.email.toLowerCase() === cleanEmail,
+          (d) => d.email.toLowerCase() === email || (fallbackRole === 'worker' && d.role === 'worker') || (fallbackRole === 'customer' && d.role === 'customer'),
         );
-        if (demo) {
-          matched = { id: `usr-${demo.role}`, email: demo.email, password: demo.password, role: demo.role, name: demo.name };
+        if (demo && (cleanId.includes(demo.role) || cleanId === demo.email)) {
+          matched = { id: `usr-${demo.role}`, email: demo.email, role: demo.role, name: demo.name, phone: '9876543210' };
           saveUserToDb(matched);
         }
       }
@@ -97,31 +98,41 @@ export function AuthProvider({ children }) {
       let token = null;
 
       if (matched) {
-        // If password does not match, update it to the user's current password so they can log in seamlessly
-        if (matched.password !== cleanPw) {
-          matched.password = cleanPw;
-          saveUserToDb(matched);
-        }
-        userData = { id: matched.id, email: matched.email, name: matched.name, role: matched.role };
+        userData = {
+          id: matched.id,
+          email: matched.email,
+          name: matched.name,
+          role: matched.role,
+          phone: matched.phone,
+          trade: matched.trade,
+          visitRate: matched.visitRate || (matched.role === 'worker' ? 499 : undefined),
+          kycStatus: matched.kycStatus || (matched.role === 'worker' ? 'approved' : 'approved'),
+          aadharNumber: matched.aadharNumber,
+          panNumber: matched.panNumber,
+          aadharUploaded: matched.aadharUploaded,
+          panUploaded: matched.panUploaded,
+        };
         token = `fixovia-token-${matched.role}-${Date.now()}`;
       } else {
-        // User not found in database: automatically add this email & password to the database!
-        const prettyName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const prettyName = isPhone ? (fallbackRole === 'worker' ? 'Partner Pro' : 'Customer Member') : cleanId.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         const newUser = {
           id: `usr-${Date.now()}`,
-          email: cleanEmail,
-          password: cleanPw,
+          email: email,
+          phone: isPhone ? cleanPhone : undefined,
           role: fallbackRole,
+          trade: fallbackRole === 'worker' ? 'Electrician' : undefined,
+          visitRate: fallbackRole === 'worker' ? 499 : undefined,
           name: prettyName || (fallbackRole === 'worker' ? 'Partner Pro' : 'Customer Member'),
+          kycStatus: fallbackRole === 'worker' ? 'approved' : 'approved',
         };
         saveUserToDb(newUser);
-        userData = { id: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role };
+        userData = { id: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role, phone: newUser.phone, trade: newUser.trade, visitRate: newUser.visitRate, kycStatus: newUser.kycStatus };
         token = `fixovia-token-${newUser.role}-${Date.now()}`;
       }
 
       // Also attempt real API in background if online (gracefully catch if offline)
       try {
-        await api.login(cleanEmail, cleanPw);
+        await api.login(email, otpOrPw || '4827');
       } catch {}
 
       saveSession(userData, token);
@@ -138,28 +149,49 @@ export function AuthProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const cleanEmail = (data.email || '').trim().toLowerCase();
-      const cleanPw = (data.password || '').trim();
+      const cleanPhone = (data.phone || '').replace(/\s|-/g, '').replace(/^\+?91/, '');
+      const cleanEmail = (data.email || (cleanPhone ? `${cleanPhone}@fixovia.in` : '')).trim().toLowerCase();
       const assignedRole = data.role || 'customer';
-      const prettyName = data.name || cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const prettyName = data.name || (assignedRole === 'worker' ? 'Partner Pro' : 'Customer Member');
+      const defaultKyc = data.kycStatus || (assignedRole === 'worker' ? 'under_verification' : 'approved');
 
       const newUser = {
         id: `usr-${Date.now()}`,
         email: cleanEmail,
-        password: cleanPw,
+        phone: cleanPhone,
+        trade: data.trade,
+        visitRate: data.visitRate ? Number(data.visitRate) : (assignedRole === 'worker' ? 499 : undefined),
         role: assignedRole,
         name: prettyName,
+        kycStatus: defaultKyc,
+        aadharNumber: data.aadharNumber || '',
+        panNumber: data.panNumber || '',
+        aadharUploaded: !!data.aadharUploaded,
+        panUploaded: !!data.panUploaded,
       };
 
       // Add to persistent local database
       saveUserToDb(newUser);
 
       let token = `fixovia-token-${newUser.role}-${Date.now()}`;
-      const userData = { id: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role };
+      const userData = {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        phone: newUser.phone,
+        trade: newUser.trade,
+        visitRate: newUser.visitRate,
+        kycStatus: newUser.kycStatus,
+        aadharNumber: newUser.aadharNumber,
+        panNumber: newUser.panNumber,
+        aadharUploaded: newUser.aadharUploaded,
+        panUploaded: newUser.panUploaded,
+      };
 
       // Also register on backend if server is online
       try {
-        const res = await api.register({ ...data, email: cleanEmail, password: cleanPw });
+        const res = await api.register({ ...data, email: cleanEmail, password: 'otp-verified' });
         if (res?.token) token = res.token;
       } catch {}
 
@@ -171,6 +203,16 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
+  }, [saveSession]);
+
+  const updateUser = useCallback((updates) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      saveSession(updated, localStorage.getItem('fixovia_access_token'));
+      saveUserToDb(updated);
+      return updated;
+    });
   }, [saveSession]);
 
   const logout = useCallback(() => {
@@ -186,6 +228,7 @@ export function AuthProvider({ children }) {
     error,
     login,
     register,
+    updateUser,
     logout,
     isAuthenticated: !!user,
     role: user?.role ?? null,
